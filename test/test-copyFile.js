@@ -8,7 +8,6 @@ const allowedFileCopy = allowedFile + '.copy';
 testAllForms({
 	method: 'copyFile',
 	attempts: [
-		// boxed
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(disallowedFile, disallowedFileCopy));
 			assert.equal(result, FAIL, 'copyFile from disallowedFile to disallowedFileCopy should fail when sandboxed');
@@ -27,6 +26,20 @@ testAllForms({
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(allowedFile, allowedFileCopy));
 			assert.equal(result, undefined, 'copyFile from allowedFile to allowedFileCopy should succeed when sandboxed');
+			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes', 'allowedFileCopy should contain the contents of allowedFile');
+		},
+		
+		// ensure non-path arguments are getting sent on 2-path methods
+		async methodProxy => {
+			fs.writeFileSync(allowedFileCopy, 'existing', 'utf8');
+			let result = await methodProxy(allowedFile, allowedFileCopy, fs.constants.COPYFILE_EXCL);
+			assert.equal(result, FAIL, 'copyFile should fail at overwriting an existing file when mode is COPYFILE_EXCL');
+			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'existing', 'allowedFileCopy should contain its original contents');
+		},
+		async methodProxy => {
+			fs.writeFileSync(allowedFileCopy, 'existing', 'utf8');
+			let result = await boxed(() => methodProxy(allowedFile, allowedFileCopy));
+			assert.equal(result, undefined, 'copyFile should succeed at overwriting an existing file when mode is not specified');
 			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes', 'allowedFileCopy should contain the contents of allowedFile');
 		},
 	],
