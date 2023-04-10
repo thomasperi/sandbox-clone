@@ -1,4 +1,4 @@
-// to-do: this deserves its own npm package and thorough testing
+// to-do: allow multiple allowed directories
 
 const fs = require('fs');
 const path = require('path');
