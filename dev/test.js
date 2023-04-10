@@ -48,6 +48,60 @@ async function tryMonkey(label, getMethod) {
 	assert.equal(original, unmonkeyed, `${label} should be restored after unmonkeying`);
 }
 
+function itPromise(method, label, attempts) {
+	if (typeof fs.promises[method] === 'function') {
+		it(`should sandbox ${label}`, async () => {
+			await tryMonkey(label, async () => fs.promises[method]);
+			await tryMethod(attempts, async (...a) => {
+				try {
+					return await fs.promises[method](...a);
+				} catch (e) {
+					return FAIL;
+				}
+			});
+		});
+	}
+}
+
+function itCallback(method, label, attempts) {
+	if (typeof fs[method] === 'function') {
+		it(`should sandbox ${label}`, async () => {
+			await tryMonkey(label, async () => fs[method]);
+			await tryMethod(attempts, (...a) => new Promise((resolve) => {
+				try {
+					fs[method](...a, (error, result) => {
+						// Accommodate the weird callback for fs.exists
+						if (label === 'fs.exists') {
+							result = error;
+							error = false;
+						}
+						resolve(error ? FAIL : result);
+					});
+				} catch (e) {
+					resolve(FAIL);
+				}
+			}));
+		});
+	}
+}
+
+function itSync(method, label, attempts) {
+	if (typeof fs[method] === 'function') {
+		it(`should sandbox ${label}`, async () => {
+			await tryMonkey(label, async () => fs[method]);
+			await tryMethod(attempts, async (...a) => {
+				try {
+					return fs[method](...a);
+				} catch (e) {
+					return FAIL;
+				}
+			});
+		});
+	}
+}
+
+// Wrap promise methods, callback methods, and sync methods in consistent async proxy
+// methods so that they can all be tested the same way.
 function testFeature({methods, attempts}) {
 	const labels = methods.map((item) => {
 		const [method, kind] = item;
@@ -59,44 +113,15 @@ function testFeature({methods, attempts}) {
 		for (const [method, kind, label] of methods) {
 			switch (kind) {
 				case 'promise': {
-					it(`should sandbox ${label}`, async () => {
-						await tryMonkey(label, async () => fs.promises[method]);
-						await tryMethod(attempts, async (...a) => {
-							try {
-								return await fs.promises[method](...a);
-							} catch (e) {
-								return FAIL;
-							}
-						});
-					});
+					itPromise(method, label, attempts);
 					break;
 				}
 				case 'callback': {
-					it(`should sandbox ${label}`, async () => {
-						await tryMonkey(label, async () => fs[method]);
-						await tryMethod(attempts, (...a) => new Promise((resolve) => {
-							try {
-								fs[method](...a, (error, result) => {
-									resolve(error ? FAIL : result);
-								});
-							} catch (e) {
-								resolve(FAIL);
-							}
-						}));
-					});
+					itCallback(method, label, attempts);
 					break;
 				}
 				case 'sync': {
-					it(`should sandbox ${label}`, async () => {
-						await tryMonkey(label, async () => fs[method]);
-						await tryMethod(attempts, async (...a) => {
-							try {
-								return fs[method](...a);
-							} catch (e) {
-								return FAIL;
-							}
-						});
-					});
+					itSync(method, label, attempts);
 					break;
 				}
 			}
