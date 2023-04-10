@@ -1,18 +1,21 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { FAIL, boxed, testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 testAllForms({
-	setup: () => {
-		fs.chmodSync(disallowedFile, 0o400); // read-only
-		fs.chmodSync(allowedFile, 0o200); // write-only
-	},
 	method: 'access',
-	args: file => [file, fs.constants.W_OK],
 	promises: true,
 	callbacks: true,
 	synchronous: true,
-	assertions: (result) => {
-		assert.equal(result, undefined);
-	},
+	attempts: [
+		async methodProxy => {
+			let result = await boxed(() => methodProxy(disallowedFile, fs.constants.R_OK));
+			assert.equal(result, FAIL, 'read access on disallowedFile should fail when sandboxed');
+		},
+		async methodProxy => {
+			// Accessing the allowed file for read should succeed
+			let result = await boxed(() => methodProxy(allowedFile, fs.constants.R_OK));
+			assert.equal(result, undefined, 'read access on allowedFile should succeed when sandboxed');
+		},
+	],
 });

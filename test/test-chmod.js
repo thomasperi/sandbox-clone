@@ -1,26 +1,39 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { FAIL, boxed, testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 testAllForms({
-	setup: () => {
-		// make both read-only initially
-		fs.chmodSync(disallowedFile, 0o400);
-		fs.chmodSync(allowedFile, 0o400);
-	},
 	method: 'chmod',
-	args: file => [file, 0o200], // only the allowed one should change to write-only
 	promises: true,
 	callbacks: true,
 	synchronous: true,
-	assertions: (result) => {
-		assert.equal(result, undefined);
-	
-		// allowed should be writable now, having been chmod'd to write-only
-		fs.accessSync(allowedFile, fs.constants.W_OK);
-
-		// disallowed should still be readable, NOT having been chmod'd to write-only
-		fs.accessSync(disallowedFile, fs.constants.R_OK);
-	},
+	attempts: [
+		async methodProxy => {
+			// Set disallowed read-write initially, then try and fail to make it read-only.
+			fs.chmodSync(disallowedFile, 0o600);
+			
+			let result = await boxed(() => methodProxy(disallowedFile, 0o400));
+			assert.equal(result, FAIL, 'chmod disallowedFile to read-only while sandboxed should fail');
+			
+			try {
+				fs.accessSync(allowedFile, fs.constants.W_OK);
+			} catch (e) {
+				assert.fail('disallowedFile should still be writable after chmod failed');
+			}
+		},
+		async methodProxy => {
+			// Set allowed file read-only initially, then make it writable.
+			fs.chmodSync(disallowedFile, 0o400);
+			
+			let result = await boxed(() => methodProxy(allowedFile, 0o600));
+			assert.equal(result, undefined, 'chmod allowedFile to read-only while sandboxed should succeed');
+			
+			// File should now be writable because the chmod succeeded
+			try {
+				fs.accessSync(allowedFile, fs.constants.W_OK);
+			} catch (e) {
+				assert.fail('chmod allowedFile should be writable after chmod made it so');
+			}
+		},
+	],
 });
-
