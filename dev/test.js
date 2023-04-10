@@ -61,7 +61,7 @@ function testAllForms({method, attempts}) {
 				await tryOneWay(attempts, (...a) => new Promise((resolve) => {
 					try {
 						fs[method](...a, (error, result) => {
-							resolve(error ? error : result);
+							resolve(error ? FAIL : result);
 						});
 					} catch (e) {
 						resolve(FAIL);
