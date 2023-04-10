@@ -7,10 +7,6 @@ const has = Object.prototype.hasOwnProperty;
 
 const fsStashed = stash(
 	fs,
-	[
-		'symlink',
-		'symlinkSync',
-	],
 	{
 		access: 1,
 		appendFile: 1,
@@ -72,6 +68,8 @@ const fsStashed = stash(
 		rmSync: 1,
 		statSync: 1,
 		statfsSync: 1,
+		symlink: 0, // special case for symlinks
+		symlinkSync: 0, // special case for symlinks
 		truncateSync: 1,
 		unlinkSync: 1,
 		utimesSync: 1,
@@ -81,9 +79,6 @@ const fsStashed = stash(
 
 const promisesStashed = stash(
 	fs.promises,
-	[
-		'symlink'
-	],
 	{
 		access: 1,
 		appendFile: 1,
@@ -109,6 +104,7 @@ const promisesStashed = stash(
 		rm: 1,
 		stat: 1,
 		statfs: 1,
+		symlink: 0, // special case for symlinks
 		truncate: 1,
 		unlink: 1,
 		utimes: 1,
@@ -117,12 +113,7 @@ const promisesStashed = stash(
 	}
 );
 
-// const realpathsWithNative = [
-// 	'realpath',
-// 	'realpathSync'
-// ];
-
-function stash(imported, symlinkMethods, argCounts) {
+function stash(imported, argCounts) {
 	const unmonkeyed = Object.assign({}, imported);
 	const bound = {};
 	for (const key of Object.keys(imported)) {
@@ -132,7 +123,7 @@ function stash(imported, symlinkMethods, argCounts) {
 		}
 		bound[key] = val;
 	}
-	return {imported, unmonkeyed, bound, symlinkMethods, argCounts};
+	return {imported, unmonkeyed, bound, argCounts};
 }
 
 function unmonkey(stashed) {
@@ -143,31 +134,26 @@ function unmonkey(stashed) {
 }
 
 function monkey(stashed, sandboxDir) {
-	const { imported, bound, symlinkMethods, argCounts } = stashed;
+	const { imported, bound, argCounts } = stashed;
 	Object.keys(argCounts).forEach(key => {
 		const count = argCounts[key];
-		imported[key] = function (...args) {
-			for (let i = 0; i < count; i++) {
-				verify(args[i], sandboxDir);
-			}
-			return bound[key](...args);
-		};
-	});
-	// 	realpathsWithNative.forEach(rp => {
-	// 		fs[rp].native = function (pathname, ...args) {
-	// 			verify(pathname, sandboxDir);
-	// 			return fs.realpath(pathname, ...args);
-	// 		};
-	// 	});
-	symlinkMethods.forEach(key => {
-		imported[key] = function (target, link, ...args) {
-			const linkAbs = path.resolve(link);
-			const linkParent = path.dirname(linkAbs);
-			const targetAbs = path.isAbsolute(target) ? target : path.join(linkParent, target);
-			verify(targetAbs, sandboxDir);
-			verify(linkAbs, sandboxDir);
-			return bound[key](target, link, ...args);
-		};
+		if (count > 0) {
+			imported[key] = function (...args) {
+				for (let i = 0; i < count; i++) {
+					verify(args[i], sandboxDir);
+				}
+				return bound[key](...args);
+			};
+		} else { // special case for symlinks
+			imported[key] = function (target, link, ...args) {
+				const linkAbs = path.resolve(link);
+				const linkParent = path.dirname(linkAbs);
+				const targetAbs = path.isAbsolute(target) ? target : path.join(linkParent, target);
+				verify(targetAbs, sandboxDir);
+				verify(linkAbs, sandboxDir);
+				return bound[key](target, link, ...args);
+			};
+		}
 	});
 }
 
