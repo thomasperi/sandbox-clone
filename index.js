@@ -12,7 +12,6 @@ const fsStashed = stash(
 		'symlinkSync',
 	],
 	{
-		// callback
 		access: 1,
 		appendFile: 1,
 		chmod: 1,
@@ -48,8 +47,6 @@ const fsStashed = stash(
 		watch: 1,
 		watchFile: 1,
 		writeFile: 1,
-
-		// sync
 		accessSync: 1,
 		appendFileSync: 1,
 		chmodSync: 1,
