@@ -63,16 +63,16 @@ function bothCallback(fn, args) {
 
 function testAllForms({setup, method, args, promises, callbacks, synchronous, assertions}) {
 	const methodSync = `${method}Sync`;
-	async function each(way, action) {
+	async function each(both, action) {
 		return await withTempDir(async () => {
 			if (setup) {
 				setup();
 			}
 			const unbox = sandboxFs(boxDir);
-			await way(action, args);
+			const result = await both(action, args);
 			unbox();
 			if (assertions) {
-				assertions();
+				assertions(result);
 			}
 		});
 	}
