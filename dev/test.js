@@ -2,7 +2,6 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path').posix;
-const assert = require('assert');
 const sandboxFs = require('../');
 
 const testDir = path.join(os.tmpdir(), 'test-sandbox-fs');
@@ -63,6 +62,7 @@ function bothCallback(fn, args) {
 }
 
 function testAllForms({setup, method, args, promises, callbacks, synchronous, assertions}) {
+	const methodSync = `${method}Sync`;
 	async function each(way, action) {
 		return await withTempDir(async () => {
 			if (setup) {
@@ -71,59 +71,32 @@ function testAllForms({setup, method, args, promises, callbacks, synchronous, as
 			const unbox = sandboxFs(boxDir);
 			await way(action, args);
 			unbox();
-			assertions();
+			if (assertions) {
+				assertions();
+			}
 		});
 	}
-	describe(`Test all forms of ${method} methods`, async () => {
-		if (promises) {
+	describe(`Test all '${method}' methods`, async () => {
+		if (promises && fs.promises && fs.promises[method]) {
 			it(`should work with fs.promises.${method}`, async () => {
 				await each(bothPromise, (a) => fs.promises[method](...a));
 			});
 		}
-		if (callbacks) {
+		if (callbacks && fs[method]) {
 			it(`should work with fs.${method}`, async () => {
 				await each(bothCallback, (a) => fs[method](...a));
 			});
 		}
-		if (synchronous) {
-			it(`should work with fs.${method}Sync`, async () => {
-				await each(bothSync, (a) => fs[`${method}Sync`](...a));
+		if (synchronous && fs[methodSync]) {
+			it(`should work with fs.${methodSync}`, async () => {
+				await each(bothSync, (a) => fs[methodSync](...a));
 			});
 		}
 	});
 }
 
-testAllForms({
-	method: 'appendFile',
-	args: file => [file, ' zote', 'utf8'],
-	promises: true,
-	callbacks: true,
-	synchronous: true,
-	assertions: () => {
-		const actualNo = fs.readFileSync(disallowedFile, 'utf8');
-		const actualYes = fs.readFileSync(allowedFile, 'utf8');
-		assert.equal(actualNo, 'no');
-		assert.equal(actualYes, 'yes zote');
-	},
-});
-
-testAllForms({
-	setup: () => {
-		// make both read-only initially
-		fs.chmodSync(disallowedFile, 0o400);
-		fs.chmodSync(allowedFile, 0o400);
-	},
-	method: 'chmod',
-	args: file => [file, 0o200], // only the allowed one should change to write-only
-	promises: true,
-	callbacks: true,
-	synchronous: true,
-	assertions: () => {
-		// allowed should be writable now, having been chmod'd to write-only
-		fs.accessSync(allowedFile, fs.constants.W_OK);
-
-		// disallowed should still be readable, NOT having been chmod'd to write-only
-		fs.accessSync(disallowedFile, fs.constants.R_OK);
-	},
-});
-
+module.exports = {
+	testAllForms,
+	disallowedFile,
+	allowedFile,
+};
