@@ -7,8 +7,8 @@ const sandboxFs = require('../');
 
 const testDir = path.join(os.tmpdir(), 'test-sandbox-fs');
 const boxDir = path.join(testDir, 'the-sandbox');
-const disallowedFile = path.join(testDir, 'disallowed.txt');
-const allowedFile = path.join(boxDir, 'allowed.txt');
+const disallowedFile = path.join(testDir, 'disallowed');
+const allowedFile = path.join(boxDir, 'allowed');
 
 const FAIL = ['FAIL'];
 
