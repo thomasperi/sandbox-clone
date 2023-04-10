@@ -12,4 +12,7 @@ testAllForms({
 	promises: true,
 	callbacks: true,
 	synchronous: true,
+	assertions: (result) => {
+		assert.equal(result, undefined);
+	},
 });

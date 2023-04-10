@@ -13,7 +13,9 @@ testAllForms({
 	promises: true,
 	callbacks: true,
 	synchronous: true,
-	assertions: () => {
+	assertions: (result) => {
+		assert.equal(result, undefined);
+	
 		// allowed should be writable now, having been chmod'd to write-only
 		fs.accessSync(allowedFile, fs.constants.W_OK);
 

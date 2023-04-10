@@ -8,7 +8,9 @@ testAllForms({
 	promises: true,
 	callbacks: true,
 	synchronous: true,
-	assertions: () => {
+	assertions: (result) => {
+		assert.equal(result, undefined);
+	
 		const actualNo = fs.readFileSync(disallowedFile, 'utf8');
 		const actualYes = fs.readFileSync(allowedFile, 'utf8');
 		assert.equal(actualNo, 'no');
