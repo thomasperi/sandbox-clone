@@ -7,30 +7,27 @@ const allowedFileCopy = allowedFile + '.copy';
 
 testAllForms({
 	method: 'copyFile',
-	promises: true,
-	callbacks: true,
-	synchronous: true,
 	attempts: [
+		// boxed
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(disallowedFile, disallowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile should fail to copy TO and FROM disallowed files when sandboxed');
-			assert(!fs.existsSync(disallowedFileCopy), 'the copy should not exist');
+			assert.equal(result, FAIL, 'copyFile from disallowedFile to disallowedFileCopy should fail when sandboxed');
+			assert(!fs.existsSync(disallowedFileCopy), 'the copy from disallowed to disallowed should not exist');
 		},
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(disallowedFile, allowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile should fail to copy FROM a disallowed file when sandboxed');
-			assert(!fs.existsSync(allowedFileCopy), 'copy should not exist');
+			assert.equal(result, FAIL, 'copyFile from disallowedFile to allowedFileCopy should fail when sandboxed');
+			assert(!fs.existsSync(allowedFileCopy), 'the copy from disallowedFile to allowedFileCopy should not exist');
 		},
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(allowedFile, disallowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile should fail to copy TO a disallowed file when sandboxed');
-			assert(!fs.existsSync(disallowedFileCopy), 'copy should not exist');
+			assert.equal(result, FAIL, 'copyFile from allowedFile to disallowedFileCopy should fail when sandboxed');
+			assert(!fs.existsSync(disallowedFileCopy), 'the copy from allowedFile to disallowedFileCopy should not exist');
 		},
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(allowedFile, allowedFileCopy));
-			assert.equal(result, undefined, 'copyFile should succeed to copy TO and FROM allowed files when sandboxed');
-			assert(fs.existsSync(allowedFileCopy), 'copy should exist');
-			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes');
+			assert.equal(result, undefined, 'copyFile from allowedFile to allowedFileCopy should succeed when sandboxed');
+			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes', 'allowedFileCopy should contain the contents of allowedFile');
 		},
 	],
 });

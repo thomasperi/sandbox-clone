@@ -39,12 +39,12 @@ async function tryOneWay(attempts, fsMethodProxy) {
 	}
 }
 
-function testAllForms({method, attempts, promises, callbacks, synchronous}) {
+function testAllForms({method, attempts}) {
 	const methodSync = `${method}Sync`;
 
 	describe(`Test all '${method}' methods`, async () => {
 		
-		if (promises && fs.promises && fs.promises[method]) {
+		if (fs.promises && fs.promises[method]) {
 			it(`should work with fs.promises.${method}`, async () => {
 				await tryOneWay(attempts, async (...a) => {
 					try {
@@ -56,7 +56,7 @@ function testAllForms({method, attempts, promises, callbacks, synchronous}) {
 			});
 		}
 		
-		if (callbacks && fs[method]) {
+		if (fs[method]) {
 			it(`should work with fs.${method}`, async () => {
 				await tryOneWay(attempts, (...a) => new Promise((resolve) => {
 					try {
@@ -70,7 +70,7 @@ function testAllForms({method, attempts, promises, callbacks, synchronous}) {
 			});
 		}
 		
-		if (synchronous && fs[methodSync]) {
+		if (fs[methodSync]) {
 			it(`should work with fs.${methodSync}`, async () => {
 				await tryOneWay(attempts, async (...a) => {
 					try {
