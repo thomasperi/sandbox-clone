@@ -1,12 +1,16 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { FAIL, boxed, testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { FAIL, boxed, testFeature, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const readOnly = 0o400;
 const readWrite = 0o600;
 
-testAllForms({
-	method: 'chmod',
+testFeature({
+	methods: [
+		['chmod', 'promise'],
+		['chmod', 'callback'],
+		['chmodSync', 'sync'],
+	],
 	attempts: [
 	
 		// boxed

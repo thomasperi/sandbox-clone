@@ -1,12 +1,16 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { FAIL, boxed, testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { FAIL, boxed, testFeature, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const disallowedFileCopy = disallowedFile + '.copy';
 const allowedFileCopy = allowedFile + '.copy';
 
-testAllForms({
-	method: 'copyFile',
+testFeature({
+	methods: [
+		['copyFile', 'promise'],
+		['copyFile', 'callback'],
+		['copyFileSync', 'sync'],
+	],
 	attempts: [
 		async methodProxy => {
 			let result = await boxed(() => methodProxy(disallowedFile, disallowedFileCopy));

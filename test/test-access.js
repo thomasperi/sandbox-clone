@@ -1,9 +1,13 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { FAIL, boxed, testAllForms, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { FAIL, boxed, testFeature, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
-testAllForms({
-	method: 'access',
+testFeature({
+	methods: [
+		['access', 'promise'],
+		['access', 'callback'],
+		['accessSync', 'sync'],
+	],
 	attempts: [
 		// boxed
 		async methodProxy => {
