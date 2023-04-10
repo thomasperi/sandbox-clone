@@ -34,7 +34,7 @@ const fsStashed = stash(
 		readdir: 1,
 		readFile: 1,
 		readlink: 1,
-		realpath: 1,
+		// 		realpath: 1,
 		rename: 2,
 		rmdir: 1,
 		rm: 1,
@@ -66,7 +66,7 @@ const fsStashed = stash(
 		readdirSync: 1,
 		readFileSync: 1,
 		readlinkSync: 1,
-		realpathSync: 1,
+		// 		realpathSync: 1,
 		renameSync: 2,
 		rmdirSync: 1,
 		rmSync: 1,
@@ -103,7 +103,7 @@ const promisesStashed = stash(
 		readdir: 1,
 		readFile: 1,
 		readlink: 1,
-		realpath: 1,
+		// 		realpath: 1,
 		rename: 2,
 		rmdir: 1,
 		rm: 1,
@@ -117,10 +117,10 @@ const promisesStashed = stash(
 	}
 );
 
-const realpathsWithNative = [
-	'realpath',
-	'realpathSync'
-];
+// const realpathsWithNative = [
+// 	'realpath',
+// 	'realpathSync'
+// ];
 
 function stash(imported, symlinkMethods, argCounts) {
 	const unmonkeyed = Object.assign({}, imported);
@@ -153,12 +153,12 @@ function monkey(stashed, sandboxDir) {
 			return bound[key](...args);
 		};
 	});
-	realpathsWithNative.forEach(rp => {
-		fs[rp].native = function (pathname, ...args) {
-			verify(pathname, sandboxDir);
-			return fs.realpath(pathname, ...args);
-		};
-	});
+	// 	realpathsWithNative.forEach(rp => {
+	// 		fs[rp].native = function (pathname, ...args) {
+	// 			verify(pathname, sandboxDir);
+	// 			return fs.realpath(pathname, ...args);
+	// 		};
+	// 	});
 	symlinkMethods.forEach(key => {
 		imported[key] = function (target, link, ...args) {
 			const linkAbs = path.resolve(link);
