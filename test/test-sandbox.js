@@ -109,22 +109,21 @@ testAllForms({
 
 testAllForms({
 	setup: () => {
-		// make both read only
+		// make both read-only initially
 		fs.chmodSync(disallowedFile, 0o400);
 		fs.chmodSync(allowedFile, 0o400);
 	},
 	method: 'chmod',
-	args: file => [file, 0o600], // only the allowed one should change to read-write
+	args: file => [file, 0o200], // only the allowed one should change to write-only
 	promises: true,
 	callbacks: true,
 	synchronous: true,
 	assertions: () => {
-		// disallowed should still be read-only
-		fs.accessSync(disallowedFile, fs.constants.R_OK);
-		
-		// allowed should now be read-write
-		fs.accessSync(allowedFile, fs.constants.R_OK);
+		// allowed should be writable now, having been chmod'd to write-only
 		fs.accessSync(allowedFile, fs.constants.W_OK);
+
+		// disallowed should still be readable, NOT having been chmod'd to write-only
+		fs.accessSync(disallowedFile, fs.constants.R_OK);
 	},
 });
 
