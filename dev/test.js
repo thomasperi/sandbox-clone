@@ -1,6 +1,7 @@
 /*global describe, it */
 const os = require('os');
 const fs = require('fs');
+const assert = require('assert');
 const path = require('path').posix;
 const sandboxFs = require('../');
 
@@ -39,10 +40,27 @@ async function tryOneWay(attempts, fsMethodProxy) {
 	}
 }
 
+
 function testAllForms({method, attempts}) {
 	const methodSync = `${method}Sync`;
 
 	describe(`Test all '${method}' methods`, async () => {
+		it(`should change the methods if they exist`, async () => {
+			const grab = async () => ({
+				promise: fs.promises[method],
+				callback: fs[method],
+				synchronous: fs[methodSync],
+			});
+			const original = await grab();
+			const monkeyed = await boxed(grab);
+			const unmonkeyed = await grab();
+			for (const way of ['promise', 'callback', 'synchronous']) {
+				if (typeof unmonkeyed[way] === 'function') {
+					assert.notEqual(monkeyed[way], unmonkeyed[way], `${way} method should be different after monkeying`);
+					assert.equal(original[way], unmonkeyed[way], `${way} method should be restored after unmonkeying`);
+				}
+			}
+		});
 		
 		if (fs.promises && fs.promises[method]) {
 			it(`should work with fs.promises.${method}`, async () => {
