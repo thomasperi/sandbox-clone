@@ -117,11 +117,11 @@ function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
 	const pathIndices = methodPaths[methodName];
 	switch (methodName) {
 		case 'access':
-		case 'accessSync': return function (path, mode, ...args) {
-			if ((mode || 0) & fs.constants.W_OK) {
-				verify(path, sandboxDirs);
+		case 'accessSync': return function (...args) {
+			if (args[1] & fs.constants.W_OK) {
+				verify(args[0], sandboxDirs);
 			}
-			return realNamespace[methodName](path, mode, ...args);
+			return realNamespace[methodName](...args);
 		};
 		default: return function (...args) {
 			for (const pathIndex of pathIndices) {

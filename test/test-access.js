@@ -14,9 +14,32 @@ describeMany(
 	['access', 'promise'],
 	['access', 'callback'],
 	['accessSync', 'sync'],
-	they('should succeed at accessing good file for visibility', async (__method__) => {
+	they('should succeed at accessing good file with no mode specified', async (__method__) => {
 		await withTempFiles(async () => {
 			chmod_u_rwx();
+			
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile);
+			unbox();
+			
+			assert.equal(result, undefined);
+		});
+	}),
+	they('should succeed at accessing bad file with no mode specified', async (__method__) => {
+		await withTempFiles(async () => {
+			chmod_u_rwx();
+			
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(badFile);
+			unbox();
+			
+			assert.equal(result, undefined);
+		});
+	}),
+	they('should succeed at accessing good file for visibility', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.chmodSync(goodFile, 0);
+			fs.chmodSync(badFile, 0);
 			
 			const unbox = sandboxFs(sandboxDir);
 			const result = await __method__(goodFile, F_OK);
@@ -27,7 +50,8 @@ describeMany(
 	}),
 	they('should succeed at accessing bad file for visibility', async (__method__) => {
 		await withTempFiles(async () => {
-			chmod_u_rwx();
+			fs.chmodSync(goodFile, 0);
+			fs.chmodSync(badFile, 0);
 			
 			const unbox = sandboxFs(sandboxDir);
 			const result = await __method__(badFile, F_OK);
@@ -103,4 +127,3 @@ describeMany(
 		});
 	}),
 );
-

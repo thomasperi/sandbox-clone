@@ -10,11 +10,17 @@ const goodFile = path.join(sandboxDir, 'good-file');
 const badFile = path.join(testDir, 'bad-file');
 
 async function withTempFiles(fn) {
-	fs.mkdirSync(sandboxDir, {recursive: true});
-	fs.writeFileSync(goodFile, 'good', 'utf8');
-	fs.writeFileSync(badFile, 'bad', 'utf8');
-	await fn(sandboxDir);
-	fs.rmSync(testDir, {recursive: true, force: true});
+	if (fs.existsSync(testDir)) {
+		throw `${testDir} already exists, delete manually`;
+	}
+	try {
+		fs.mkdirSync(sandboxDir, {recursive: true});
+		fs.writeFileSync(goodFile, 'good', 'utf8');
+		fs.writeFileSync(badFile, 'bad', 'utf8');
+		await fn(sandboxDir);
+	} finally {
+		fs.rmSync(testDir, {recursive: true, force: true});
+	}
 }
 
 function they(itLabel, itFn) {
