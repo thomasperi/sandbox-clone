@@ -1,4 +1,8 @@
-// to-do: allow multiple allowed directories
+// to-do: Allow multiple allowed directories
+
+// to-do: Add mkdtemp to the list.
+// It will need special treatment because the path of the directory being created 
+// doesn't come from any of the arguments to the method.
 
 const fs = require('fs');
 const path = require('path');
@@ -23,14 +27,14 @@ const fsStashed = stash(
 		link: 2,
 		lstat: 1,
 		mkdir: 1,
-		mkdtemp: 1,
+		// 		mkdtemp: 1,
 		open: 1,
 		openAsBlob: 1,
 		opendir: 1,
 		readdir: 1,
 		readFile: 1,
 		readlink: 1,
-		// 		realpath: 1,
+		realpath: 1,
 		rename: 2,
 		rmdir: 1,
 		rm: 1,
@@ -56,13 +60,13 @@ const fsStashed = stash(
 		linkSync: 2,
 		lstatSync: 1,
 		mkdirSync: 1,
-		mkdtempSync: 1,
+		// 		mkdtempSync: 1,
 		opendirSync: 1,
 		openSync: 1,
 		readdirSync: 1,
 		readFileSync: 1,
 		readlinkSync: 1,
-		// 		realpathSync: 1,
+		realpathSync: 1,
 		renameSync: 2,
 		rmdirSync: 1,
 		rmSync: 1,
@@ -92,13 +96,13 @@ const promisesStashed = stash(
 		link: 2,
 		lstat: 1,
 		mkdir: 1,
-		mkdtemp: 1,
+		// 		mkdtemp: 1,
 		open: 1,
 		opendir: 1,
 		readdir: 1,
 		readFile: 1,
 		readlink: 1,
-		// 		realpath: 1,
+		realpath: 1,
 		rename: 2,
 		rmdir: 1,
 		rm: 1,
@@ -119,7 +123,7 @@ function stash(imported, argCounts) {
 	for (const key of Object.keys(imported)) {
 		let val = imported[key];
 		if (has.call(argCounts, key) && typeof val === 'function') {
-			val = val.bind(bound);
+			val = val.bind(unmonkeyed);
 		}
 		bound[key] = val;
 	}
@@ -157,7 +161,26 @@ function monkey(stashed, sandboxDir) {
 	});
 }
 
+function monkeyRealpathNative(sandboxDir) {
+	['realpath', 'realpathSync'].forEach(key => {
+		const monkeyed = fs[key];
+		const unmonkeyed = fsStashed.unmonkeyed[key];
+		if (monkeyed === unmonkeyed) { // then it's not really monkeyed
+			throw `fs.${key} should be monkeyed before monkeyRealPathNative() is called`;
+		}
+		const bound = unmonkeyed.native.bind(monkeyed);
+		monkeyed.native = function (path, ...args) {
+			verify(path, sandboxDir);
+			return bound(path, ...args);
+		};
+	});
+}
+
 function verify(pathToVerify, sandboxDir) {
+	// to-do:
+	// Use realpath to reject paths with symlinks that resolve outside the sandbox.
+	// Exempt the methods that are reading the symlinks themselves.
+	
 	if (typeof pathToVerify === 'string') {
 		pathToVerify = path.resolve(pathToVerify);
 		if (!isInside(pathToVerify, sandboxDir, true)) {
@@ -187,9 +210,12 @@ function sandboxFs(dir) {
 	dir = path.resolve(dir);
 	monkey(fsStashed, dir);
 	monkey(promisesStashed, dir);
+	monkeyRealpathNative(dir);
 	return () => {
 		unmonkey(fsStashed);
 		unmonkey(promisesStashed);
+		// There's no need to unmonkey the realpath.native methods since they were only
+		// mounted onto the monkeyed realpath methods, not the genuine ones.
 	};
 }
 
