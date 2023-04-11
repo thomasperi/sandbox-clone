@@ -133,15 +133,27 @@ function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
 }
 
 function verify(pathToVerify, sandboxDirs) {
-	// to-do:
-	// Use realpath to reject paths with symlinks that resolve outside the sandbox.
-	// Exempt the methods that are reading the symlinks themselves.
-	
 	if (typeof pathToVerify === 'string') {
-		pathToVerify = path.resolve(pathToVerify);
+		pathToVerify = realExistingPartOfPath(pathToVerify);
 		if (!sandboxDirs.some(sandboxDir => isInside(pathToVerify, sandboxDir, true))) {
-			throw `${pathToVerify} is outside the sandbox directories (${sandboxDirs.join(', ')})`;
+			throw {
+				code: 'OUTSIDE_SANDBOX',
+				path: pathToVerify,
+				sandboxes: sandboxDirs,
+				msg: `${pathToVerify} is outside the sandbox directories (${sandboxDirs.join(', ')})`,
+			};
 		}
+	}
+}
+
+function realExistingPartOfPath(pathName) {
+	try {
+		return fs.realpathSync.native(pathName);
+	} catch (e) {
+		// Unlike the native and promises versions of realpath,
+		// realpathSync's error provides the first real part of the path that didn't exist,
+		// so back out one directory and we've got the part that does exist.
+		return fs.realpathSync(path.dirname(e.path));
 	}
 }
 
@@ -154,11 +166,11 @@ function isInside(child, parent, inclusive = false) {
 		return false;
 	}
 	for (;;) {
-		relative = path.dirname(relative);
 		switch (relative) {
 			case '.': return true;
 			case '..': return false;
 		}
+		relative = path.dirname(relative);
 	}
 }
 

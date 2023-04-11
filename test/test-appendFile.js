@@ -21,7 +21,7 @@ describeMany(
 			const unbox = sandboxFs(sandboxDir);
 			const result = await __method__(badFile, ' zote', 'utf8');
 			unbox();
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 			assert.equal(fs.readFileSync(badFile, 'utf8'), 'bad');
 		});
 	}),

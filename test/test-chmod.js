@@ -37,7 +37,7 @@ describeMany(
 			const result = await __method__(badFile, readOnly);
 			unbox();
 
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 			try {
 				fs.accessSync(badFile, writeOK);
 			} catch (e) {

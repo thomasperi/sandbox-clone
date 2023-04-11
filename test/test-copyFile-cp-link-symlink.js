@@ -50,8 +50,7 @@ describeMany(
 			const unbox = sandboxFs(sandboxDir);
 			const result = await __method__(goodFile, badFileNew);
 			unbox();
-			
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 			assert(!fs.existsSync(badFileNew));
 		});
 	}),
@@ -61,7 +60,7 @@ describeMany(
 			const result = await __method__(badFile, badFileNew);
 			unbox();
 			
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 			assert(!fs.existsSync(badFileNew));
 		});
 	}),
@@ -85,7 +84,7 @@ describeMany(
 // 			const result = await __method__(goodFile, goodFileNew, fs.constants.COPYFILE_EXCL);
 // 			unbox();
 // 			
-// 			assert.equal(result, 'FAIL');
+// 			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 // 			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'existing');
 // 		});
 // 	}),

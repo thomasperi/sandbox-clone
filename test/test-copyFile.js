@@ -6,7 +6,7 @@ const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = req
 const goodFileNew = goodFile + '-copy';
 
 // copyFile is already tested elsewhere with other 2-path methods,
-// but we can also use it to test whether 3rd parameters get successfully
+// but we can also use it to test whether 3rd arguments get successfully
 // passed to 2-path methods.
 describeMany(
 	['copyFile', 'promise'],
@@ -32,7 +32,7 @@ describeMany(
 			const result = await __method__(goodFile, goodFileNew, fs.constants.COPYFILE_EXCL);
 			unbox();
 			
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'EEXIST');
 			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'existing');
 		});
 	}),

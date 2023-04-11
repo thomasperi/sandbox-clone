@@ -59,36 +59,33 @@ function makeIt(methodName, methodType, itFn) {
 	return async () => {
 		switch (methodType) {
 			case 'promise': {
-				// to-do: await tryMonkey(label, async () => fs.promises[method]);
 				await itFn(async (...a) => {
 					try {
 						return await fs.promises[methodName](...a);
 					} catch (e) {
-						return 'FAIL';
+						return e;
 					}
 				});
 				break;
 			}
 			case 'callback': {
-				// to-do: await tryMonkey(label, async () => fs[method]);
 				await itFn((...a) => new Promise(resolve => {
 					try {
 						fs[methodName](...a, (error, result) => {
-							resolve(error ? 'FAIL' : result);
+							resolve(error === null ? result : error);
 						});
 					} catch (e) {
-						resolve('FAIL');
+						resolve(e);
 					}
 				}));
 				break;
 			}
 			case 'sync': {
-				// to-do: await tryMonkey(label, async () => fs[method]);
 				await itFn(async (...a) => {
 					try {
 						return fs[methodName](...a);
 					} catch (e) {
-						return 'FAIL';
+						return e;
 					}
 				});
 				break;

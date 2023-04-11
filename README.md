@@ -17,4 +17,3 @@ await fs.access('/boo/far.txt'); // succeeds now
 ## Unfinished Features
 
 * `mkdtemp` methods are not sandboxed yet
-* Internal `verify` method should use realpath so that symlinks don't allow access to outside the sandboxed directories

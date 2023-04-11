@@ -101,7 +101,7 @@ describeMany(
 			const result = await __method__(badFile, W_OK);
 			unbox();
 			
-			assert.equal(result, 'FAIL');
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 		});
 	}),
 	they('should succeed at accessing good file for execute', async (__method__) => {
