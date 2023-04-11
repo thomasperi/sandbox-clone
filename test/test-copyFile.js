@@ -1,50 +1,39 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { FAIL, boxed, testFeature, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
-const disallowedFileCopy = disallowedFile + '.copy';
-const allowedFileCopy = allowedFile + '.copy';
+const goodFileNew = goodFile + '-copy';
 
-testFeature({
-	methods: [
-		['copyFile', 'promise'],
-		['copyFile', 'callback'],
-		['copyFileSync', 'sync'],
-	],
-	attempts: [
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(disallowedFile, disallowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile from disallowedFile to disallowedFileCopy should fail when sandboxed');
-			assert(!fs.existsSync(disallowedFileCopy), 'the copy from disallowed to disallowed should not exist');
-		},
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(disallowedFile, allowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile from disallowedFile to allowedFileCopy should fail when sandboxed');
-			assert(!fs.existsSync(allowedFileCopy), 'the copy from disallowedFile to allowedFileCopy should not exist');
-		},
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(allowedFile, disallowedFileCopy));
-			assert.equal(result, FAIL, 'copyFile from allowedFile to disallowedFileCopy should fail when sandboxed');
-			assert(!fs.existsSync(disallowedFileCopy), 'the copy from allowedFile to disallowedFileCopy should not exist');
-		},
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(allowedFile, allowedFileCopy));
-			assert.equal(result, undefined, 'copyFile from allowedFile to allowedFileCopy should succeed when sandboxed');
-			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes', 'allowedFileCopy should contain the contents of allowedFile');
-		},
-		
-		// ensure non-path arguments are getting sent on 2-path methods
-		async methodProxy => {
-			fs.writeFileSync(allowedFileCopy, 'existing', 'utf8');
-			let result = await methodProxy(allowedFile, allowedFileCopy, fs.constants.COPYFILE_EXCL);
-			assert.equal(result, FAIL, 'copyFile should fail at overwriting an existing file when mode is COPYFILE_EXCL');
-			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'existing', 'allowedFileCopy should contain its original contents');
-		},
-		async methodProxy => {
-			fs.writeFileSync(allowedFileCopy, 'existing', 'utf8');
-			let result = await boxed(() => methodProxy(allowedFile, allowedFileCopy));
-			assert.equal(result, undefined, 'copyFile should succeed at overwriting an existing file when mode is not specified');
-			assert.equal(fs.readFileSync(allowedFileCopy, 'utf8'), 'yes', 'allowedFileCopy should contain the contents of allowedFile');
-		},
-	],
-});
+// copyFile is already tested elsewhere with other 2-path methods,
+// but we can also use it to test whether 3rd parameters get successfully
+// passed to 2-path methods.
+describeMany(
+	['copyFile', 'promise'],
+	['copyFile', 'callback'],
+	['copyFileSync', 'sync'],
+	they('should succeed at overwriting goodFileNew when no mode is specified', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
+
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile, goodFileNew);
+			unbox();
+			
+			assert.equal(result, undefined);
+			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'good');
+		});
+	}),
+	they('should fail at overwriting goodFileNew when COPYFILE_EXCL mode is specified', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
+
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile, goodFileNew, fs.constants.COPYFILE_EXCL);
+			unbox();
+			
+			assert.equal(result, 'FAIL');
+			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'existing');
+		});
+	}),
+);

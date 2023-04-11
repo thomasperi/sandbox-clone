@@ -1,40 +1,28 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { FAIL, boxed, testFeature, disallowedFile, allowedFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
-testFeature({
-	methods: [
-		['appendFile', 'promise'],
-		['appendFile', 'callback'],
-		['appendFileSync', 'sync'],
-	],
-	attempts: [
-		// boxed
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(disallowedFile, ' zote', 'utf8'));
-			let content = fs.readFileSync(disallowedFile, 'utf8');
-			assert.equal(result, FAIL, 'appendFile should fail at writing disallowedFile when sandboxed');
-			assert.equal(content, 'no', 'content of disallowedFile should be unchanged when sandboxed');
-		},
-		async methodProxy => {
-			let result = await boxed(() => methodProxy(allowedFile, ' zote', 'utf8'));
-			let content = fs.readFileSync(allowedFile, 'utf8');
-			assert.equal(result, undefined, 'appendFile should succeed at writing allowedFile when sandboxed');
-			assert.equal(content, 'yes zote', 'content of allowedFile should be changed when sandboxed');
-		},
-
-		// not boxed
-		async methodProxy => {
-			let result = await methodProxy(disallowedFile, ' zote', 'utf8');
-			let content = fs.readFileSync(disallowedFile, 'utf8');
-			assert.equal(result, undefined, 'appendFile should succeed at writing disallowedFile when not sandboxed');
-			assert.equal(content, 'no zote', 'content of disallowedFile should be changed when not sandboxed');
-		},
-		async methodProxy => {
-			let result = await methodProxy(allowedFile, ' zote', 'utf8');
-			let content = fs.readFileSync(allowedFile, 'utf8');
-			assert.equal(result, undefined, 'appendFile should succeed at writing allowedFile when not sandboxed');
-			assert.equal(content, 'yes zote', 'content of allowedFile should be changed when not sandboxed');
-		},
-	],
-});
+describeMany(
+	['appendFile', 'promise'],
+	['appendFile', 'callback'],
+	['appendFileSync', 'sync'],
+	they('should succeed at appending good file', async (__method__) => {
+		await withTempFiles(async () => {
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile, ' zote', 'utf8');
+			unbox();
+			assert.equal(result, undefined);
+			assert.equal(fs.readFileSync(goodFile, 'utf8'), 'good zote');
+		});
+	}),
+	they('should fail at appending bad file', async (__method__) => {
+		await withTempFiles(async () => {
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(badFile, ' zote', 'utf8');
+			unbox();
+			assert.equal(result, 'FAIL');
+			assert.equal(fs.readFileSync(badFile, 'utf8'), 'bad');
+		});
+	}),
+);

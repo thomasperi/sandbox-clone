@@ -1,138 +1,101 @@
 /*global describe, it */
 const os = require('os');
 const fs = require('fs');
-const assert = require('assert');
 const path = require('path').posix;
-const sandboxFs = require('../');
 
-const testDir = path.join(os.tmpdir(), 'test-sandbox-fs');
-const boxDir = path.join(testDir, 'the-sandbox');
-const disallowedFile = path.join(testDir, 'disallowed');
-const allowedFile = path.join(boxDir, 'allowed');
+const tmp = os.tmpdir();
+const testDir = path.join(tmp, 'test-sandbox-fs');
+const sandboxDir = path.join(testDir, 'the-sandbox');
+const goodFile = path.join(sandboxDir, 'good-file');
+const badFile = path.join(testDir, 'bad-file');
 
-const FAIL = ['FAIL'];
-
-async function boxed(fn) {
-	const unbox = sandboxFs(boxDir);
-	let result = await fn();
-	unbox();
-	return result;
+async function withTempFiles(fn) {
+	fs.mkdirSync(sandboxDir, {recursive: true});
+	fs.writeFileSync(goodFile, 'good', 'utf8');
+	fs.writeFileSync(badFile, 'bad', 'utf8');
+	await fn(sandboxDir);
+	fs.rmSync(testDir, {recursive: true, force: true});
 }
 
-// Create a temp directory, run the test, and delete the temp.
-async function withTempDir(fn) {
-	if (fs.existsSync(testDir)) {
-		throw 'temp directory already exists';
+function they(itLabel, itFn) {
+	return {itLabel, itFn};
+}
+
+function describeMany(...args) {
+	const methods = [];
+	const them = [];
+	const labels = [];
+	for (const arg of args) {
+		if (arg instanceof Array) {
+			const [methodName, methodType] = arg;
+			const methodLabel = methodType === 'promise' ? `fs.promises.${methodName}` : `fs.${methodName}`;
+			const methodNamespace = methodType === 'promise' ? fs.promises : fs;
+			arg.push(methodLabel, methodNamespace);
+			methods.push(arg);
+			labels.push(methodLabel);
+		} else {
+			them.push(arg);
+		}
 	}
-	fs.mkdirSync(boxDir, {recursive: true});
-	fs.writeFileSync(allowedFile, 'yes', 'utf8');
-	fs.writeFileSync(disallowedFile, 'no', 'utf8');
-	try {
-		await fn();
-	} finally {
-		fs.rmSync(testDir, {recursive: true, force: true});
-	}
-}
-
-async function tryMethod(attempts, fsMethodProxy) {
-	for (const attempt of attempts) {
-		await withTempDir(() => attempt(fsMethodProxy));
-	}
-}
-
-async function tryMonkey(label, getMethod) {
-	const original = await getMethod();
-	const monkeyed = await boxed(getMethod);
-	const unmonkeyed = await getMethod();
-	assert.notEqual(monkeyed, unmonkeyed, `${label} should be different after monkeying`);
-	assert.equal(original, unmonkeyed, `${label} should be restored after unmonkeying`);
-}
-
-function itPromise(method, label, attempts) {
-	if (typeof fs.promises[method] === 'function') {
-		it(`should sandbox ${label}`, async () => {
-			await tryMonkey(label, async () => fs.promises[method]);
-			await tryMethod(attempts, async (...a) => {
-				try {
-					return await fs.promises[method](...a);
-				} catch (e) {
-					return FAIL;
+	describe(`Test ${labels.join(', ')}`, async () => {
+		for (const {itLabel, itFn} of them) {
+			for (const [methodName, methodType, methodLabel, methodNamespace] of methods) {
+				if (typeof methodNamespace[methodName] !== 'function') {
+					continue;
 				}
-			});
-		});
-	}
-}
-
-function itCallback(method, label, attempts) {
-	if (typeof fs[method] === 'function') {
-		it(`should sandbox ${label}`, async () => {
-			await tryMonkey(label, async () => fs[method]);
-			await tryMethod(attempts, (...a) => new Promise((resolve) => {
-				try {
-					fs[method](...a, (error, result) => {
-						// Accommodate the weird callback for fs.exists
-						if (label === 'fs.exists') {
-							result = error;
-							error = false;
-						}
-						resolve(error ? FAIL : result);
-					});
-				} catch (e) {
-					resolve(FAIL);
-				}
-			}));
-		});
-	}
-}
-
-function itSync(method, label, attempts) {
-	if (typeof fs[method] === 'function') {
-		it(`should sandbox ${label}`, async () => {
-			await tryMonkey(label, async () => fs[method]);
-			await tryMethod(attempts, async (...a) => {
-				try {
-					return fs[method](...a);
-				} catch (e) {
-					return FAIL;
-				}
-			});
-		});
-	}
-}
-
-// Wrap promise methods, callback methods, and sync methods in consistent async proxy
-// methods so that they can all be tested the same way.
-function testFeature({methods, attempts}) {
-	const labels = methods.map((item) => {
-		const [method, kind] = item;
-		const label = kind === 'promise' ? `fs.promises.${method}` : `fs.${method}`;
-		item.push(label);
-		return label;
-	}).join(', ');
-	describe(`Test ${labels}`, async () => {
-		for (const [method, kind, label] of methods) {
-			switch (kind) {
-				case 'promise': {
-					itPromise(method, label, attempts);
-					break;
-				}
-				case 'callback': {
-					itCallback(method, label, attempts);
-					break;
-				}
-				case 'sync': {
-					itSync(method, label, attempts);
-					break;
-				}
+				it(`${itLabel} (${methodLabel})`, makeIt(methodName, methodType, itFn));
 			}
 		}
 	});
 }
 
+function makeIt(methodName, methodType, itFn) {
+	return async () => {
+		switch (methodType) {
+			case 'promise': {
+				// to-do: await tryMonkey(label, async () => fs.promises[method]);
+				await itFn(async (...a) => {
+					try {
+						return await fs.promises[methodName](...a);
+					} catch (e) {
+						return 'FAIL';
+					}
+				});
+				break;
+			}
+			case 'callback': {
+				// to-do: await tryMonkey(label, async () => fs[method]);
+				await itFn((...a) => new Promise(resolve => {
+					try {
+						fs[methodName](...a, (error, result) => {
+							resolve(error ? 'FAIL' : result);
+						});
+					} catch (e) {
+						resolve('FAIL');
+					}
+				}));
+				break;
+			}
+			case 'sync': {
+				// to-do: await tryMonkey(label, async () => fs[method]);
+				await itFn(async (...a) => {
+					try {
+						return fs[methodName](...a);
+					} catch (e) {
+						return 'FAIL';
+					}
+				});
+				break;
+			}
+		}
+	};
+}
+
 module.exports = {
-	FAIL,
-	boxed,
-	testFeature,
-	disallowedFile,
-	allowedFile,
+	sandboxDir,
+	goodFile,
+	badFile,
+	describeMany,
+	they,
+	withTempFiles,
 };
