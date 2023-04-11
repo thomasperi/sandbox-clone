@@ -16,6 +16,5 @@ await fs.access('/boo/far.txt'); // succeeds now
 
 ## Unfinished Features
 
-* `access` methods should be made self-aware so that they don't throw an exception on read access.
 * `mkdtemp` methods are not sandboxed yet
 * Internal `verify` method should use realpath so that symlinks don't allow access to outside the sandboxed directories
