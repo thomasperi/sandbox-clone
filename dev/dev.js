@@ -33,7 +33,7 @@ function lintFile(file) {
 function runTests() {
 	console.log('run tests', new Date());
 	// Run tests as a child process so as not to need to clear the require cache.
-	const command = 'npx mocha';// --reporter nyan';
+	const command = 'npx mocha --reporter nyan';
 	const tokens = command.split(/\s+/);
 	spawn(tokens.shift(), tokens, { stdio: 'inherit' });
 }
