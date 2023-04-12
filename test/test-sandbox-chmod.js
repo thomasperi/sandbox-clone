@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const readOnly = 0o400;
@@ -16,7 +16,7 @@ describeMany(
 		await withTempFiles(async () => {
 			fs.chmodSync(goodFile, readOnly);
 
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, readWrite);
 			unbox();
 
@@ -33,7 +33,7 @@ describeMany(
 		await withTempFiles(async () => {
 			fs.chmodSync(badFile, readWrite);
 
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, readOnly);
 			unbox();
 

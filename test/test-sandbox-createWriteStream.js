@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 describeMany(
@@ -8,7 +8,7 @@ describeMany(
 	
 	they('should succeed at creating a WriteStream to goodFile', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 
 			// Wait until the stream is ready before ending the test and removing the temp dir,
 			// or else the stream throws an error when the file has already been removed.
@@ -26,7 +26,7 @@ describeMany(
 
 	they('should fail at creating a WriteStream to badFile', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile);
 			unbox();
 

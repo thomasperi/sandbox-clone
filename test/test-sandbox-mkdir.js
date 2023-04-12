@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const path = require('path');
@@ -13,7 +13,7 @@ describeMany(
 	['mkdirSync', 'sync'],
 	they('should succeed at creating a good directory', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodSubdir);
 			unbox();
 			assert.equal(result, undefined);
@@ -23,7 +23,7 @@ describeMany(
 	}),
 	they('should fail at creating a bad directory', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badSubdir);
 			unbox();
 			assert.equal(result.code, 'OUTSIDE_SANDBOX');

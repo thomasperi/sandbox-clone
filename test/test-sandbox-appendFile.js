@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 describeMany(
@@ -9,7 +9,7 @@ describeMany(
 	['appendFileSync', 'sync'],
 	they('should succeed at appending good file', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, ' zote', 'utf8');
 			unbox();
 			assert.equal(result, undefined);
@@ -18,7 +18,7 @@ describeMany(
 	}),
 	they('should fail at appending bad file', async (__method__) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, ' zote', 'utf8');
 			unbox();
 			assert.equal(result.code, 'OUTSIDE_SANDBOX');

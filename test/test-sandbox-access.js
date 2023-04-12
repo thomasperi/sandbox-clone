@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const { F_OK, R_OK, W_OK, X_OK } = fs.constants;
@@ -18,7 +18,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile);
 			unbox();
 			
@@ -29,7 +29,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile);
 			unbox();
 			
@@ -41,7 +41,7 @@ describeMany(
 			fs.chmodSync(goodFile, 0);
 			fs.chmodSync(badFile, 0);
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, F_OK);
 			unbox();
 			
@@ -53,7 +53,7 @@ describeMany(
 			fs.chmodSync(goodFile, 0);
 			fs.chmodSync(badFile, 0);
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, F_OK);
 			unbox();
 			
@@ -64,7 +64,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, R_OK);
 			unbox();
 			
@@ -75,7 +75,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, R_OK);
 			unbox();
 			
@@ -86,7 +86,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, W_OK);
 			unbox();
 			
@@ -97,7 +97,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, W_OK);
 			unbox();
 			
@@ -108,7 +108,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, X_OK);
 			unbox();
 			
@@ -119,7 +119,7 @@ describeMany(
 		await withTempFiles(async () => {
 			chmod_u_rwx();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badFile, X_OK);
 			unbox();
 			

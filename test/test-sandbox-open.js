@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const writeFlags = ['a', 'a+', 'as', 'as+', 'r+', 'rs+', 'w', 'w+'];
@@ -40,7 +40,7 @@ describeMany(
 
 	they('should succeed at opening a good file for reading with no flag', async (__method__, type) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile);
 			unbox();
 			
@@ -50,7 +50,7 @@ describeMany(
 	}),
 	they('should succeed at opening a good file for reading with `r` flag', async (__method__, type) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, 'r');
 			unbox();
 			
@@ -60,7 +60,7 @@ describeMany(
 	}),
 	they('should succeed at opening a bad file for reading with no flag', async (__method__, type) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile);
 			unbox();
 			
@@ -70,7 +70,7 @@ describeMany(
 	}),
 	they('should succeed at opening a bad file for reading with `r` flag', async (__method__, type) => {
 		await withTempFiles(async () => {
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodFile, 'r');
 			unbox();
 			
@@ -81,7 +81,7 @@ describeMany(
 	they('should succeed at opening a good file for writing', async (__method__, type) => {
 		for (const flag of writeFlags) {
 			await withTempFiles(async () => {
-				const unbox = sandboxFs(sandboxDir);
+				sandbox(sandboxDir);
 				const result = await __method__(goodFile, flag);
 				unbox();
 			
@@ -91,7 +91,7 @@ describeMany(
 		}
 		for (const flag of writeFlagsNoExist) {
 			await withTempFiles(async () => {
-				const unbox = sandboxFs(sandboxDir);
+				sandbox(sandboxDir);
 				const result = await __method__(`${goodFile}-no-exist`, flag);
 				unbox();
 			
@@ -103,7 +103,7 @@ describeMany(
 	they('should fail at opening a bad file for writing', async (__method__) => {
 		for (const flag of writeFlags) {
 			await withTempFiles(async () => {
-				const unbox = sandboxFs(sandboxDir);
+				sandbox(sandboxDir);
 				const result = await __method__(badFile, flag);
 
 				await closeResult(result);
@@ -113,7 +113,7 @@ describeMany(
 		}
 		for (const flag of writeFlagsNoExist) {
 			await withTempFiles(async () => {
-				const unbox = sandboxFs(sandboxDir);
+				sandbox(sandboxDir);
 				const result = await __method__(`${badFile}-no-exist`, flag);
 
 				await closeResult(result);

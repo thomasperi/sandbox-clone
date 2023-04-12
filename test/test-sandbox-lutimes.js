@@ -1,6 +1,6 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const sandboxFs = require('..'); // eslint-disable-line no-unused-vars
+const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
 const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const goodToGood = `${goodFile}-link-to-good`;
@@ -32,7 +32,7 @@ describeMany(
 		await withTempFiles(async () => {
 			makeLinks();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodToGood, atime, mtime);
 			unbox();
 			
@@ -48,7 +48,7 @@ describeMany(
 		await withTempFiles(async () => {
 			makeLinks();
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(goodToBad, atime, mtime);
 			unbox();
 			
@@ -65,7 +65,7 @@ describeMany(
 			makeLinks();
 			const oldStat = fs.lstatSync(badToGood);
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badToGood, atime, mtime);
 			unbox();
 			
@@ -82,7 +82,7 @@ describeMany(
 			makeLinks();
 			const oldStat = fs.lstatSync(badToBad);
 			
-			const unbox = sandboxFs(sandboxDir);
+			sandbox(sandboxDir);
 			const result = await __method__(badToBad, atime, mtime);
 			unbox();
 			

@@ -6,7 +6,7 @@ const lint = require('./lint.js');
 const project = path.resolve(`${__dirname}/..`);
 const files = {
 	dev: `${project}/dev/*.js`,
-	src: `${project}/index.js`,
+	src: `${project}/src/*.js`,
 	tests: `${project}/test/*.js`,
 };
 
