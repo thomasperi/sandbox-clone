@@ -64,28 +64,35 @@ describeMany(
 			assert(!fs.existsSync(badFileNew));
 		});
 	}),
-// 	they('should succeed at overwriting goodFileNew when no mode is specified', async (__method__) => {
-// 		await withTempFiles(async () => {
-// 			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
-// 
-// 			const unbox = sandboxFs(sandboxDir);
-// 			const result = await __method__(goodFile, goodFileNew);
-// 			unbox();
-// 			
-// 			assert.equal(result, undefined);
-// 			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'good');
-// 		});
-// 	}),
-// 	they('should fail at overwriting goodFileNew when COPYFILE_EXCL mode is specified', async (__method__) => {
-// 		await withTempFiles(async () => {
-// 			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
-// 
-// 			const unbox = sandboxFs(sandboxDir);
-// 			const result = await __method__(goodFile, goodFileNew, fs.constants.COPYFILE_EXCL);
-// 			unbox();
-// 			
-// 			assert.equal(result.code, 'OUTSIDE_SANDBOX');
-// 			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'existing');
-// 		});
-// 	}),
+);
+
+// Use copyFile to test whether 3rd arguments get successfully passed through 2-path methods.
+describeMany(
+	['copyFile', 'promise'],
+	['copyFile', 'callback'],
+	['copyFileSync', 'sync'],
+	they('should succeed at overwriting goodFileNew when no mode is specified', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
+
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile, goodFileNew);
+			unbox();
+			
+			assert.equal(result, undefined);
+			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'good');
+		});
+	}),
+	they('should fail at overwriting goodFileNew when COPYFILE_EXCL mode is specified', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.writeFileSync(goodFileNew, 'existing', 'utf8');
+
+			const unbox = sandboxFs(sandboxDir);
+			const result = await __method__(goodFile, goodFileNew, fs.constants.COPYFILE_EXCL);
+			unbox();
+			
+			assert.equal(result.code, 'EEXIST');
+			assert.equal(fs.readFileSync(goodFileNew, 'utf8'), 'existing');
+		});
+	}),
 );
