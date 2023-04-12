@@ -1,84 +1,81 @@
-// to-do: Add mkdtemp to the list.
-// It will need special treatment because the path of the directory being created 
-// doesn't come from any of the arguments to the method.
-
 const fs = require('fs');
 const path = require('path');
 
 const fsMethods = {
-	access: [0],
-	appendFile: [0],
-	chmod: [0],
-	chown: [0],
-	copyFile: [1],
-	cp: [1],
-	createReadStream: [0],
-	createWriteStream: [0],
-	exists: [0],
-	lchmod: [0],
-	lchown: [0],
-	lutimes: [0],
-	link: [1],
-	mkdir: [0],
-	// mkdtemp: [0],
-	open: [0],
-	openAsBlob: [0],
-	opendir: [0],
-	rename: [0, 1],
-	rmdir: [0],
-	rm: [0],
-	truncate: [0],
-	unlink: [0],
-	utimes: [0],
-	writeFile: [0],
-	accessSync: [0],
-	appendFileSync: [0],
-	chmodSync: [0],
-	chownSync: [0],
-	copyFileSync: [1],
-	cpSync: [1],
-	lchmodSync: [0],
-	lchownSync: [0],
-	lutimesSync: [0],
-	linkSync: [1],
-	mkdirSync: [0],
-	// mkdtempSync: [0],
-	opendirSync: [0],
-	openSync: [0],
-	renameSync: [0, 1],
-	rmdirSync: [0],
-	rmSync: [0],
-	symlink: [1],
-	symlinkSync: [1],
-	truncateSync: [0],
-	unlinkSync: [0],
-	utimesSync: [0],
-	writeFileSync: [0],
+	access: [1],
+	appendFile: [1],
+	chmod: [1],
+	chown: [1],
+	copyFile: [2],
+	cp: [2],
+	createReadStream: [1],
+	createWriteStream: [1],
+	exists: [1],
+	lchmod: [1],
+	lchown: [1],
+	lutimes: [-1],
+	link: [2],
+	mkdir: [1],
+	mkdtemp: [1],
+	open: [1],
+	openAsBlob: [1],
+	opendir: [1],
+	rename: [1, 2],
+	rmdir: [1],
+	rm: [1],
+	truncate: [1],
+	unlink: [1],
+	utimes: [1],
+	writeFile: [1],
+	accessSync: [1],
+	appendFileSync: [1],
+	chmodSync: [1],
+	chownSync: [1],
+	copyFileSync: [2],
+	cpSync: [2],
+	lchmodSync: [1],
+	lchownSync: [1],
+	lutimesSync: [-1],
+	linkSync: [2],
+	mkdirSync: [1],
+	mkdtempSync: [1],
+	opendirSync: [1],
+	openSync: [1],
+	renameSync: [1, 2],
+	rmdirSync: [1],
+	rmSync: [1],
+	symlink: [2],
+	symlinkSync: [2],
+	truncateSync: [1],
+	unlinkSync: [1],
+	utimesSync: [1],
+	writeFileSync: [1],
 };
 const promiseMethods = {
-	access: [0],
-	appendFile: [0],
-	chmod: [0],
-	chown: [0],
-	copyFile: [1],
-	cp: [1],
-	lchmod: [0],
-	lchown: [0],
-	lutimes: [0],
-	link: [1],
-	mkdir: [0],
-	// mkdtemp: [0],
-	open: [0],
-	opendir: [0],
-	rename: [0, 1],
-	rmdir: [0],
-	rm: [0],
-	symlink: [1],
-	truncate: [0],
-	unlink: [0],
-	utimes: [0],
-	writeFile: [0],
+	access: [1],
+	appendFile: [1],
+	chmod: [1],
+	chown: [1],
+	copyFile: [2],
+	cp: [2],
+	lchmod: [1],
+	lchown: [1],
+	lutimes: [-1],
+	link: [2],
+	mkdir: [1],
+	mkdtemp: [1],
+	open: [1],
+	opendir: [1],
+	rename: [1, 2],
+	rmdir: [1],
+	rm: [1],
+	symlink: [2],
+	truncate: [1],
+	unlink: [1],
+	utimes: [1],
+	writeFile: [1],
 };
+// const writeFlags = ['a', 'ax', 'a+', 'ax+', 'as', 'as+', 'r+', 'rs+', 'w', 'wx', 'w+', 'wx+'];
 
 const realMembers = {promises: {}};
 for (const methodName of Object.keys(fsMethods)) {
@@ -114,7 +111,6 @@ function assign(members) {
 }
 
 function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
-	const pathIndices = methodPaths[methodName];
 	switch (methodName) {
 		case 'access':
 		case 'accessSync': return function (...args) {
@@ -123,17 +119,39 @@ function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
 			}
 			return realNamespace[methodName](...args);
 		};
-		default: return function (...args) {
-			for (const pathIndex of pathIndices) {
-				verify(args[pathIndex], sandboxDirs);
-			}
-			return realNamespace[methodName](...args);
-		};
+		case 'open':
+		case 'openSync': {
+			return function (...args) {
+				// if (writeFlags.includes(args[1])) {
+				if (/[aw+]/i.test(args[1])) {
+					verify(args[0], sandboxDirs);
+				}
+				return realNamespace[methodName](...args);
+			};
+		}
+		default: {
+			const indexes = methodPaths[methodName].map(pathIndex => {
+				const index = Math.abs(pathIndex);
+				const expectsLink = index !== pathIndex; // negative
+				return [index - 1, expectsLink];
+			});
+			return function (...args) {
+				for (const [index, expectsLink] of indexes) {
+					verify(args[index], sandboxDirs, expectsLink);
+				}
+				return realNamespace[methodName](...args);
+			};
+		}
 	}
 }
 
-function verify(pathToVerify, sandboxDirs) {
+function verify(pathToVerify, sandboxDirs, expectsLink) {
 	if (typeof pathToVerify === 'string') {
+		if (expectsLink) {
+			// If this path is expected to be a link,
+			// only its parent and ancestors need to be real and inside the sandbox.
+			pathToVerify = path.dirname(pathToVerify);
+		}
 		pathToVerify = realExistingPartOfPath(pathToVerify);
 		if (!sandboxDirs.some(sandboxDir => isInside(pathToVerify, sandboxDir, true))) {
 			throw {

@@ -56,20 +56,17 @@ function describeMany(...args) {
 }
 
 function makeIt(methodName, methodType, itFn) {
-	return async () => {
+	const __method__ = async (...a) => {
 		switch (methodType) {
 			case 'promise': {
-				await itFn(async (...a) => {
-					try {
-						return await fs.promises[methodName](...a);
-					} catch (e) {
-						return e;
-					}
-				});
-				break;
+				try {
+					return await fs.promises[methodName](...a);
+				} catch (e) {
+					return e;
+				}
 			}
 			case 'callback': {
-				await itFn((...a) => new Promise(resolve => {
+				return await new Promise(resolve => {
 					try {
 						fs[methodName](...a, (error, result) => {
 							resolve(error === null ? result : error);
@@ -77,21 +74,18 @@ function makeIt(methodName, methodType, itFn) {
 					} catch (e) {
 						resolve(e);
 					}
-				}));
-				break;
+				});
 			}
 			case 'sync': {
-				await itFn(async (...a) => {
-					try {
-						return fs[methodName](...a);
-					} catch (e) {
-						return e;
-					}
-				});
-				break;
+				try {
+					return fs[methodName](...a);
+				} catch (e) {
+					return e;
+				}
 			}
 		}
 	};
+	return () => itFn(__method__, methodType);
 }
 
 module.exports = {
