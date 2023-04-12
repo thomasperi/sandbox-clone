@@ -157,21 +157,15 @@ function realExistingPartOfPath(pathName) {
 	}
 }
 
+// thanks to: https://github.com/sindresorhus/is-path-inside/blob/v4.0.0/index.js
 function isInside(child, parent, inclusive = false) {
-	let relative = path.relative(parent, child);
-	if (relative === '') {
-		return !!inclusive;
-	}
-	if (path.isAbsolute(relative)) {
-		return false;
-	}
-	for (;;) {
-		switch (relative) {
-			case '.': return true;
-			case '..': return false;
-		}
-		relative = path.dirname(relative);
-	}
+	const relative = path.relative(parent, child);
+	return (
+		(relative || inclusive) &&
+		relative !== '..' &&
+		!relative.startsWith(`..${path.sep}`) &&
+		!path.isAbsolute(relative)
+	);
 }
 
 module.exports = sandboxFs;
