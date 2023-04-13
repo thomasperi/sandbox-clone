@@ -26,7 +26,7 @@ function sandbox(...dirs) {
 
 function unbox() {
 	assign(realMembers);
-	_isBoxed = true;
+	_isBoxed = false;
 }
 
 function isBoxed() {

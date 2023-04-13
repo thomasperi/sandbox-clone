@@ -3,7 +3,7 @@ const os = require('os'); // eslint-disable-line no-unused-vars
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const path = require('path'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { clonebox } = require('..'); // eslint-disable-line no-unused-vars
+const { clonebox, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
 const tmp = os.tmpdir();
 const source = path.join(__dirname, 'test-clonebox');
@@ -39,12 +39,11 @@ describe('clonebox tests', async () => {
 		} finally {
 			box.destroy();
 		}
-		assert(!fs.existsSync(box.base()), 'temp base should not exist after destroy');
 	});
 
-	it('should work best with try...finally', async () => {
-		let error;
+	it('should destroy in failing test with try...finally', async () => {
 		let base;
+		let error;
 		
 		// An outer try just for this test
 		try {
@@ -64,7 +63,7 @@ describe('clonebox tests', async () => {
 		
 		assert.equal(error, 'test');
 		assert(base.startsWith(os.tmpdir() + path.sep), 'sanity check on base variable');
-		assert(!fs.existsSync(base), 'destroy in finally should always run');
+		assert(!fs.existsSync(base), 'destroy should delete temp directory');
 	});
 
 	it('should clone the source directory and snapshot the temp directory', async () => {
@@ -113,7 +112,7 @@ describe('clonebox tests', async () => {
 		}
 	});
 
-	it('should `run` in sandboxed mode', async () => {
+	it('should be sandboxed during -- and only during -- `run`', async () => {
 		const box = clonebox({source});
 		try {
 			const base = box.base();
@@ -127,6 +126,7 @@ describe('clonebox tests', async () => {
 			fs.writeFileSync(outsideFile, okContent, 'utf8');
 
 			const result = box.run(argBase => {
+				assert(isBoxed());
 				runBase = argBase;
 				try {
 					fs.writeFileSync(outsideFile, notOkContent, 'utf8');
@@ -135,7 +135,8 @@ describe('clonebox tests', async () => {
 				}
 				return 'ran';
 			});
-			
+
+			assert(!isBoxed());
 			assert.equal(result, 'ran');
 			
 			let actualContent = fs.readFileSync(outsideFile, 'utf8');
