@@ -68,6 +68,17 @@ Deletes this clonebox's temporary directory:
 box.destroy();
 ```
 
+You should use `try`...`finally` to ensure that the temp directory is deleted even when the test fails.
+
+```javascript
+const box = clonebox({source});
+try {
+  // Assertions go inside the try
+} finally {
+  box.destroy();
+}
+```
+
 ### `(clonebox).run(fn)`
 
 Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. The `fn` function can accept the path of the temp directory as its `base` argument.
@@ -79,11 +90,21 @@ box.run(base => {
 });
 ```
 
+The function's return value gets passed through as the return value of `box.run()`.
+
+```javascript
+let flavor = box.run(base => {
+  // ...
+  return 'pineapple';
+});
+```
+
 It works with `await` / `async` too. If you use them you have to use both, like this:
 
 ```javascript
-await box.run(async base => {
+let flavor = await box.run(async base => {
   // ...
+  return 'asynchronous pineapple';
 });
 ```
 

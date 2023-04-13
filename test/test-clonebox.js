@@ -38,11 +38,33 @@ describe('clonebox tests', async () => {
 
 		} finally {
 			box.destroy();
-			
-			// Normally assertions shouldn't go in the finally block,
-			// but this one is asserting that `destroy` removed the temp dir.
-			assert(!fs.existsSync(box.base()), 'temp base should not exist after destroy');
 		}
+		assert(!fs.existsSync(box.base()), 'temp base should not exist after destroy');
+	});
+
+	it('should work best with try...finally', async () => {
+		let error;
+		let base;
+		
+		// An outer try just for this test
+		try {
+
+			// A fake test that always throws.
+			const box = clonebox();
+			base = box.base();
+			try {
+				throw 'test';
+			} finally {
+				box.destroy();
+			}
+		
+		} catch (e) {
+			error = e;
+		}
+		
+		assert.equal(error, 'test');
+		assert(base.startsWith(os.tmpdir() + path.sep), 'sanity check on base variable');
+		assert(!fs.existsSync(base), 'destroy in finally should always run');
 	});
 
 	it('should clone the source directory and snapshot the temp directory', async () => {
