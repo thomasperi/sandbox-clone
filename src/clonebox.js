@@ -3,64 +3,88 @@ const fs = require('fs');
 const path = require('path');
 const { sandbox, unbox } = require('./sandbox.js');
 
-async function clonebox({source, encodings} = {}) {
+function clonebox({source, encodings} = {}) {
 	const prefix = path.join(os.tmpdir(), 'clonebox-');
-	const dtemp = await fs.promises.mkdtemp(prefix);
+	const dtemp = fs.mkdtempSync(prefix);
 	const cloneName = source ? path.basename(source) : 'base';
 	const base = path.join(dtemp, cloneName);
-	await setup(source, base);
+
+	let destroyed = false;
+	
+	setup(source, base);
+	
 	return {
 		base: () => base,
-		run: (fn) => run(base, fn),
-		snapshot: () => snapshot(base, encodings || {}),
-		destroy: () => destroy(dtemp),
+		snapshot: () => {
+			not(destroyed, 'snapshot');
+			return snapshot(base, encodings || {});
+		},
+		run: (fn) => {
+			not(destroyed, 'run');
+			return run(base, fn);
+		},
+		destroy: () => {
+			if (destroyed) {
+				return;
+			}
+			destroy(dtemp);
+			destroyed = true;
+		},
 		diff,
 	};
 }
 
-async function setup(source, base) {
-	if (source && fs.existsSync(source)) {
-		await copy(source, base);
-	} else {
-		await fs.mkdir(base, {recursive: true});
+function not(destroyed, method) {
+	if (destroyed) {
+		throw `can't ${method} a destroyed clonebox`;
 	}
 }
 
-async function copy(source, dest) {
-	if (await fs.stat(source).isDirectory()) {
-		await fs.mkdir(dest, {recursive: true});
-		for (const item of await fs.readdir(source)) {
+function setup(source, base) {
+	if (source && fs.existsSync(source)) {
+		copy(source, base);
+	} else {
+		fs.mkdirSync(base, {recursive: true});
+	}
+}
+
+function copy(source, dest) {
+	if ((fs.statSync(source)).isDirectory()) {
+		fs.mkdirSync(dest, {recursive: true});
+		for (const item of fs.readdirSync(source)) {
 			if (item === '.' || item  === '..') {
 				continue;
 			}
-			await copy(path.join(source, item), path.join(dest, item));
+			copy(path.join(source, item), path.join(dest, item));
 		}
 	} else {
-		await fs.copyFile(source, dest);
+		fs.copyFileSync(source, dest);
 	}
 }
 
-async function run(base, fn) {
+function run(base, fn) {
+	let result;
 	try {
 		sandbox(base);
-		await fn(base);
+		result = fn(base);
 	} finally {
 		unbox();
 	}
+	return result;
 }
 
-async function snapshot(base, encodings) {
+function snapshot(base, encodings) {
 	const files = {};
-	const encounter = async (absPath) => {
-		const stat = await fs.stat(absPath);
+	const encounter = (absPath) => {
+		const stat = fs.statSync(absPath);
 		if (stat.isDirectory()) {
-			for (const subItem of await fs.readdir(absPath)) {
-				await encounter(path.join(absPath, subItem));
+			for (const subItem of fs.readdirSync(absPath)) {
+				encounter(path.join(absPath, subItem));
 			}
 		} else if (stat.isFile()) {
 			const relPath = path.relative(base, absPath);
 			const dotExt = path.extname(absPath);
-			files[relPath] = await fs.readFile(
+			files[relPath] = fs.readFileSync(
 				absPath,
 				encodings[dotExt] || encodings[dotExt.substring(1)] || 'utf8'
 			);
@@ -70,8 +94,8 @@ async function snapshot(base, encodings) {
 	return files;
 }
 
-async function destroy(dtemp) {
-	await fs.rm(dtemp, {recursive: true, force: true});
+function destroy(dtemp) {
+	fs.rmSync(dtemp, {recursive: true, force: true});
 }
 
 function diff(before, after) {
@@ -108,4 +132,4 @@ function diff(before, after) {
 	};
 }
 
-module.exports = { clonebox, diff };
+module.exports = { clonebox };

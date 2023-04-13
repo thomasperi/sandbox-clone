@@ -20,7 +20,15 @@ await fs.access('/foo/sneg/baz.txt'); // succeeds now
 await fs.access('/boo/far.txt'); // succeeds now
 ```
 
+## `clone`
+
+Create a temporary clone of a directory of test files:
+
+
+
 ## Notes
+
+* Several methods are yet-untested.
 
 * The `access` methods don't write, but they're sandboxed anyway, because the way the
 methods provide information is by issuing errors.
