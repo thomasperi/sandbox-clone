@@ -141,13 +141,13 @@ const after = box.snapshot();
 const diffs = box.diff(before, after);
 ```
 
-`diffs` now holds an object with three properties `created`, `modified`, and `removed`, each of which holds an array of filenames (but not the files' contents).
+Now `diffs` holds an object with three properties -- `created`, `modified`, and `removed` -- each of which holds an array of filenames (but not the files' contents).
 
 ```json
 {
   "created": [
-    "images/photo.jpg",
-    "images/icon.png"
+    "images/icon.png",
+    "images/photo.jpg"
   ],
   "modified": [
     "scripts/foo.js",
@@ -161,16 +161,16 @@ const diffs = box.diff(before, after);
 
 ## Notes
 
-* Several methods are yet-untested.
+* Several patched `fs` methods are not yet tested.
 
 * The `access` methods don't write, but they're sandboxed anyway, because the way the
-methods provide information is by issuing errors.
+methods provide information is by issuing errors. The patched versions are aware of the `mode` argument and sandbox accordingly.
 
-* The `open()` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods **are** aware of the string values, and prevent the use of string flags that potentially write, append, etc.
+* The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods *are* aware of the string values, and prevent the use of string flags that potentially write, append, etc.
 
-* The `lchmod` methods are only implemented on MacOS, so are sandboxed but untested.
+* The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
 
-* Methods that change ownership are sandboxed but are untested, because they
+* Methods that change ownership are sandboxed but untested, because they
 require elevated privileges.
 
 * Methods that expect file descriptors instead of paths can't be sandboxed.
