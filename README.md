@@ -20,9 +20,50 @@ await fs.access('/foo/sneg/baz.txt'); // succeeds now
 await fs.access('/boo/far.txt'); // succeeds now
 ```
 
-## `clone`
+## `clonebox`
 
-Create a temporary clone of a directory of test files:
+Creates a temporary directory for file manipulation during tests.
+
+```javascript
+const box = clonebox();
+```
+
+Get the path of the temp directory that was created:
+
+```javascript
+box.base() // -> /tmp/clonebox-49MaGJ/base
+```
+
+Clones the temp directory from an original instead of creating an empty one:
+
+```javascript
+const box = clonebox({
+	source: '/path/to/my-test'
+});
+```
+
+A cloned directory is named using the basename of the source path:
+
+```javascript
+box.base() // -> /tmp/clonebox-XyzXD2/my-test
+```
+
+`run` calls the function in `sandbox`ed mode. The `base` argument provides the same path as what box.base() returns.
+
+```javascript
+box.run(base => {
+	fs.writeFileSync(path.join(base, 'foo.txt'), 'hello', 'utf8');
+	fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // -> error
+});
+```
+
+`run` works with `await` / `async` too:
+
+```javascript
+await box.run(async base => {
+	// ...
+});
+```
 
 
 
