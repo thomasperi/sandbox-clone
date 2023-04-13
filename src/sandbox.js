@@ -44,12 +44,12 @@ function assign(members) {
 
 function createProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
 	return function (...args) {
-		verifyArgs(methodPaths, methodName, sandboxDirs, ...args);
+		verifyArgs(methodPaths, methodName, sandboxDirs, args);
 		return realNamespace[methodName](...args);
 	};
 }
 
-function verifyArgs(methodPaths, methodName, sandboxDirs, ...args) {
+function verifyArgs(methodPaths, methodName, sandboxDirs, args) {
 	switch (methodName) {
 		case 'access':
 		case 'accessSync': {
