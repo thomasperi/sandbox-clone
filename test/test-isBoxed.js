@@ -7,7 +7,7 @@ const { sandbox, unbox, isBoxed } = require('..'); // eslint-disable-line no-unu
 
 const sandboxDir = __dirname;
 
-describe('clonebox tests', async () => {
+describe('isBoxed tests', async () => {
 
 	it('should correctly report whether the sandbox is in effect', async () => {
 		assert(!isBoxed());
