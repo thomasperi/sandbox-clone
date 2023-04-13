@@ -15,25 +15,30 @@ An experimental filesystem sandbox for reducing the risk of accidentally writing
 * `(clonebox).diff` finds differences between snapshots.
 
 
-## `sandbox()` / `unbox()`
+## `sandbox()` and `unbox()`
 
-(try/catch blocks omitted for brevity and clarity)
+Prevent writing outside the specified directory or directories with `sandbox()`. Restore the un-sandboxed real `fs` methods with `unbox()`.
 
 ```javascript
 const { W_OK } = fs.constants;
+
 sandbox('/foo/bar', '/foo/sbor');
+
+// try/catch blocks omitted for brevity and clarity
 fs.accessSync('/foo/bar/zote.txt', W_OK); // succeeds
 fs.accessSync('/foo/sbor/thed.txt', W_OK); // succeeds
 fs.accessSync('/foo/sneg/baz.txt', W_OK); // fails
 fs.accessSync('/boo/far.txt', W_OK); // fails
-unbox(); 
+
+unbox();
+
 fs.accessSync('/foo/sneg/baz.txt', W_OK); // succeeds now
 fs.accessSync('/boo/far.txt', W_OK); // succeeds now
 ```
 
 ## `clonebox()`
 
-Clone a directory for file manipulation during tests:
+Clones a directory for file manipulation during tests. Returns an object with methods for managing the directory.
 
 ```javascript
 const box = clonebox({
@@ -41,7 +46,7 @@ const box = clonebox({
 });
 ```
 
-Create an empty temp directory by not specifying a source:
+You can omit the `source` option to create an empty directory instead of cloning one.
 
 ```javascript
 const box = clonebox();
@@ -49,7 +54,7 @@ const box = clonebox();
 
 ### `(clonebox).base()`
 
-Get the path of the temp directory that was created:
+Gets the path of the temp directory this clonebox created:
 
 ```javascript
 box.base() // -> /tmp/clonebox-49MaGJ/my-test
@@ -57,7 +62,7 @@ box.base() // -> /tmp/clonebox-49MaGJ/my-test
 
 ### `(clonebox).destroy()`
 
-Delete the temporary directory:
+Deletes this clonebox's temporary directory:
 
 ```javascript
 box.destroy();
@@ -65,7 +70,7 @@ box.destroy();
 
 ### `(clonebox).run(fn)`
 
-Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. `fn` can accept the path of the temp directory as its `base` argument.
+Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. The `fn` function can accept the path of the temp directory as its `base` argument.
 
 ```javascript
 box.run(base => {
@@ -74,7 +79,7 @@ box.run(base => {
 });
 ```
 
-It works with `await` / `async` too:
+It works with `await` / `async` too. If you use them you have to use both, like this:
 
 ```javascript
 await box.run(async base => {
@@ -84,7 +89,7 @@ await box.run(async base => {
 
 ### `(clonebox).snapshot()`
 
-Loads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents.
+Reads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents.
 
 Supposing you had the following files:
 
@@ -104,7 +109,7 @@ The snapshot might look like this:
 
 ### `encodings` option
 
-The `clonebox` function accepts an `encodings` option where you can specify how various file types are read into the snapshot.
+The `clonebox` function accepts an `encodings` option where you can specify how various file types are loaded into the snapshot.
 
 ```javascript
 const box = clonebox({
@@ -115,7 +120,7 @@ const box = clonebox({
 });
 ```
 
-So if you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would appear in the snapshot as a base64-encoded string:
+If you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would appear in the snapshot as a base64-encoded string:
 
 ```json
 {
