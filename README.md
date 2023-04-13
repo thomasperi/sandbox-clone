@@ -150,11 +150,11 @@ const diffs = box.diff(before, after);
     "images/icon.png"
   ],
   "modified": [
-    "scripts/bundle.js"
-  ],
-  "removed": [
     "scripts/foo.js",
     "styles/bar.css"
+  ],
+  "removed": [
+    "images/pixel.gif"
   ]
 }
 ```
