@@ -109,7 +109,7 @@ The snapshot might look like this:
 
 ### `encodings` option
 
-The `clonebox` function accepts an `encodings` option where you can specify how various file types are loaded into the snapshot.
+The `clonebox` function accepts an `encodings` option where you can specify how various file types are loaded into its snapshots.
 
 ```javascript
 const box = clonebox({
