@@ -110,7 +110,7 @@ The `clonebox` function accepts an `encodings` option where you can specify how 
 const box = clonebox({
   source: '/path/to/my-test',
   encodings: {
-  	gif: 'base64'
+    gif: 'base64'
   }
 });
 ```
@@ -150,11 +150,11 @@ const diffs = box.diff(before, after);
     "images/icon.png"
   ],
   "modified": [
-  	"scripts/bundle.js"
+    "scripts/bundle.js"
   ],
   "removed": [
-		"scripts/foo.js",
-		"styles/bar.css"
+    "scripts/foo.js",
+    "styles/bar.css"
   ]
 }
 ```
