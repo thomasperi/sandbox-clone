@@ -1,10 +1,21 @@
 # sandbox-write
 
-An experimental monkey patch for limiting write access to specified directories via the Node.js `fs` module.
+An experimental filesystem sandbox for reducing the risk of accidentally writing out-of-scope files during testing.
 
-Its purpose is to reduce the risk of accidentally writing out-of-scope files during testing. **It is useless as a security measure.**
+* `sandbox` monkey-patches the Node.js `fs` to prevent writing outside a specified set of directories.
 
-## `sandbox` / `unbox`
+* `unbox` restores `fs` to its original un-sandboxed state.
+
+* `clonebox` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original.
+
+* `(clonebox).run` sandboxes the `clonebox` temp directory while a specified function runs, then restores the real `fs`.
+
+* `(clonebox).snapshot` loads the contents of the cloned directory into a JavaScript object for analysis.
+
+* `(clonebox).diff` finds differences between snapshots.
+
+
+## `sandbox()` / `unbox()`
 
 (try/catch blocks omitted for brevity and clarity)
 
@@ -20,52 +31,131 @@ await fs.access('/foo/sneg/baz.txt'); // succeeds now
 await fs.access('/boo/far.txt'); // succeeds now
 ```
 
-## `clonebox`
+## `clonebox()`
 
-Creates a temporary directory for file manipulation during tests.
+Clone a directory for file manipulation during tests:
+
+```javascript
+const box = clonebox({
+  source: '/path/to/my-test'
+});
+```
+
+Create an empty temp directory by not specifying a source:
 
 ```javascript
 const box = clonebox();
 ```
 
+### `(clonebox).base()`
+
 Get the path of the temp directory that was created:
 
 ```javascript
-box.base() // -> /tmp/clonebox-49MaGJ/base
+box.base() // -> /tmp/clonebox-49MaGJ/my-test
 ```
 
-Clones the temp directory from an original instead of creating an empty one:
+### `(clonebox).destroy()`
+
+Delete the temporary directory:
 
 ```javascript
-const box = clonebox({
-	source: '/path/to/my-test'
-});
+box.destroy();
 ```
 
-A cloned directory is named using the basename of the source path:
+### `(clonebox).run(fn)`
 
-```javascript
-box.base() // -> /tmp/clonebox-XyzXD2/my-test
-```
-
-`run` calls the function in `sandbox`ed mode. The `base` argument provides the same path as what box.base() returns.
+Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. `fn` can accept the path of the temp directory as its `base` argument.
 
 ```javascript
 box.run(base => {
-	fs.writeFileSync(path.join(base, 'foo.txt'), 'hello', 'utf8');
-	fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // -> error
+  fs.writeFileSync(path.join(base, 'foo.txt'), 'hello', 'utf8');
+  fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // -> error
 });
 ```
 
-`run` works with `await` / `async` too:
+It works with `await` / `async` too:
 
 ```javascript
 await box.run(async base => {
-	// ...
+  // ...
 });
 ```
 
+### `(clonebox).snapshot()`
 
+Loads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents.
+
+Supposing you had the following files:
+
+```
+/tmp/clonebox-49MaGJ/my-test/scripts/foo.js
+/tmp/clonebox-49MaGJ/my-test/styles/bar.css
+```
+
+The snapshot might look like this:
+
+```json
+{
+  "scripts/foo.js": "console.log('foo');",
+  "styles/bar.css": ".bar { color: green }"
+}
+```
+
+### `encodings` option
+
+The `clonebox` function accepts an `encodings` option where you can specify how various file types are read into the snapshot.
+
+```javascript
+const box = clonebox({
+  source: '/path/to/my-test',
+  encodings: {
+  	gif: 'base64'
+  }
+});
+```
+
+So if you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would appear in the snapshot as a base64-encoded string:
+
+```json
+{
+  "images/pixel.gif": "R0lGODlhAQABAPAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAICTAEAOw==",
+  "scripts/foo.js": "console.log('foo');",
+  "styles/bar.css": ".bar { color: green }"
+}
+```
+
+### `(clonebox).diff`
+
+Reports which files were created, modified, and removed from the temp directory between snapshots.
+
+```javascript
+const box = clonebox({
+  source: '/path/to/my-test'
+});
+const before = box.snapshot();
+box.run(base => {
+  // create, modify, and/or remove some files
+});
+const after = box.snapshot();
+const diffs = box.diff(before, after);
+```
+
+`diffs` now holds an object with three properties `created`, `modified`, and `removed`, each of which holds an array.
+
+```json
+{
+  created: [
+    // the files that are in after but not in before
+  ],
+  modified: [
+  	// the files whose contents differ between before and after
+  ],
+  removed: [
+    // the files that are in before but not in after
+  ],
+}
+```
 
 ## Notes
 
