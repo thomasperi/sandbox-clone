@@ -142,7 +142,7 @@ let flavor = box.run(base => {
 });
 ```
 
-It works with `await` / `async` too. If you use them you have to use both, like this:
+It works with `await` / `async` too.
 
 ```javascript
 let flavor = await box.run(async base => {
