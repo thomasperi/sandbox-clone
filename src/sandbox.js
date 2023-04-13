@@ -15,10 +15,10 @@ for (const methodName of Object.keys(promiseMethods)) {
 function sandbox(...dirs) {
 	const fakeMembers = {promises: {}};
 	for (const methodName of Object.keys(fsMethods)) {
-		fakeMembers[methodName] = getProxy(realMembers, fsMethods, methodName, dirs);
+		fakeMembers[methodName] = createProxy(realMembers, fsMethods, methodName, dirs);
 	}
 	for (const methodName of Object.keys(promiseMethods)) {
-		fakeMembers.promises[methodName] = getProxy(realMembers.promises, promiseMethods, methodName, dirs);
+		fakeMembers.promises[methodName] = createProxy(realMembers.promises, promiseMethods, methodName, dirs);
 	}
 	assign(fakeMembers);
 	_isBoxed = true;
@@ -42,23 +42,28 @@ function assign(members) {
 	}
 }
 
-function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
+function createProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
+	return function (...args) {
+		verifyArgs(methodPaths, methodName, sandboxDirs, ...args);
+		return realNamespace[methodName](...args);
+	};
+}
+
+function verifyArgs(methodPaths, methodName, sandboxDirs, ...args) {
 	switch (methodName) {
 		case 'access':
-		case 'accessSync': return function (...args) {
+		case 'accessSync': {
 			if (args[1] & fs.constants.W_OK) {
-				verify(args[0], sandboxDirs);
+				verifyPath(args[0], sandboxDirs);
 			}
-			return realNamespace[methodName](...args);
-		};
+			break;
+		}
 		case 'open':
 		case 'openSync': {
-			return function (...args) {
-				if (/[aw+]/i.test(args[1])) {
-					verify(args[0], sandboxDirs);
-				}
-				return realNamespace[methodName](...args);
-			};
+			if (/[aw+]/i.test(args[1])) {
+				verifyPath(args[0], sandboxDirs);
+			}
+			break;
 		}
 		default: {
 			const indexes = methodPaths[methodName].map(pathIndex => {
@@ -66,17 +71,14 @@ function getProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
 				const expectsLink = index !== pathIndex;
 				return [index - 1, expectsLink];
 			});
-			return function (...args) {
-				for (const [index, expectsLink] of indexes) {
-					verify(args[index], sandboxDirs, expectsLink);
-				}
-				return realNamespace[methodName](...args);
-			};
+			for (const [index, expectsLink] of indexes) {
+				verifyPath(args[index], sandboxDirs, expectsLink);
+			}
 		}
 	}
 }
 
-function verify(pathToVerify, sandboxDirs, expectsLink) {
+function verifyPath(pathToVerify, sandboxDirs, expectsLink) {
 	if (typeof pathToVerify === 'string') {
 		if (expectsLink) {
 			// If this path is expected to be a link,
