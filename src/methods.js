@@ -87,26 +87,6 @@ module.exports = {promiseMethods, fsMethods};
 
 /*
 
-NOTES:
-
-(access)
-These methods don't write, but they're sandboxed anyway, because the way the
-methods provide information is by issuing errors.
-
-(chown)
-Methods that change ownership are sandboxed but are untested, because they
-require elevated privileges.
-
-(fd)
-Methods that take a file descriptor instead of a path can't be sandboxed.
-
-(lchmod)
-These methods are only implemented on MacOS, so are sandboxed but untested.
-
-(ro)
-Read-only methods are not sandboxed
-
-
 NOT SANDBOXED:
 
 fs.promises.lstat (ro)

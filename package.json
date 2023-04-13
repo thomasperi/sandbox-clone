@@ -1,14 +1,19 @@
 {
-  "name": "sandbox-fs",
+  "name": "sandbox-write",
   "version": "1.0.0",
-  "description": "",
+  "description": "An experimental library for sandboxing fs write access during testing",
   "main": "index.js",
+  "files": "src/*",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Thomas Peri <hello@thomasperi.net>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasperi/sandbox-write.git"
+  },
   "devDependencies": {
     "chokidar": "^3.5.3",
     "eslint": "^8.38.0",

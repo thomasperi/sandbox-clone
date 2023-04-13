@@ -2,17 +2,27 @@
 
 An experimental sandbox for reducing the risk of accidentally writing out-of-scope files during testing.
 
-* `sandbox` monkey-patches the Node.js `fs` to prevent writing outside a specified set of directories.
+```javascript
+const { sandbox, unbox, isBoxed, clonebox } = require('sandbox-write');
+```
 
-* `unbox` restores `fs` to its original un-sandboxed state.
+* `sandbox()` monkey-patches the built-in Node.js `fs` module to prevent writing outside a specified set of directories.
 
-* `clonebox` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original.
+* `unbox()` restores original un-sandboxed state.
 
-* `(clonebox).run` sandboxes the `clonebox` temp directory while a specified function runs, then restores the real `fs`.
+* `isBoxed()` reports whether `fs` is sandboxed or not.
 
-* `(clonebox).snapshot` loads the current contents of the cloned directory into a JavaScript object for later analysis.
+* `clonebox()` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original. Returns an object with these methods:
 
-* `(clonebox).diff` finds differences between snapshots.
+	* `.base()` returns the path of the temporary directory.
+
+  * `.destroy()` deletes the temporary directory.
+
+  * `.run()` sandboxes the temp directory while a specified function runs, then restores the real `fs`.
+
+  * `.snapshot()` loads the current contents of the cloned directory into a JavaScript object for later analysis.
+
+  * `.diff()` finds differences between snapshots.
 
 
 ## `sandbox()` and `unbox()`
@@ -48,6 +58,23 @@ unbox();
 console.log(isBoxed()); // -> false
 ```
 
+### Notes about the sandboxed `fs` methods:
+
+- Several methods are not yet tested.
+
+- The real `access` methods don't write to the filesystem, but they're sandboxed anyway, because the methods provide information about what can and can't be written by either issuing an error or not. The sandboxed versions are aware of the `mode` argument and sandbox accordingly.
+
+- The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods *are* aware of the string flags (`'a'`, `'a+'`, `'as'`, etc.) and sandbox accordingly.
+
+- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
+
+- The real `chown` methods are sandboxed but untested, because they require elevated privileges.
+
+- Methods that expect file descriptors instead of paths can't be sandboxed.
+
+- Methods that only read from the filesystem but don't write are not sandboxed.
+
+
 ## `clonebox()`
 
 Clones a directory for file manipulation during tests. Returns an object with methods for managing the directory.
@@ -58,21 +85,22 @@ const box = clonebox({
 });
 ```
 
-You can omit the `source` option to create an empty directory instead of cloning one.
+### `.base()`
+
+The `base()` method returns the path of the temporary clone. The directory will have the same basename as the original (`my-test` in this example).
 
 ```javascript
-const box = clonebox();
+console.log(box.base()); // -> "/tmp/clonebox-49MaGJ/my-test"
 ```
 
-### `(clonebox).base()`
-
-Gets the path of the temp directory this clonebox created:
+If you omit the `source` option to `clonebox`, an empty directory is created instead of an existing one being cloned. The temporary path will end with the name `base`.
 
 ```javascript
-box.base() // -> /tmp/clonebox-49MaGJ/my-test
+const box = clonebox(); // No `source` option
+console.log(box.base()); // -> "/tmp/clonebox-We2MRT/base"
 ```
 
-### `(clonebox).destroy()`
+### `.destroy()`
 
 Deletes this clonebox's temporary directory:
 
@@ -94,14 +122,14 @@ try {
 // Assertions can also go after the `finally` block.
 ```
 
-### `(clonebox).run(fn)`
+### `.run(fn)`
 
 Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. The `fn` function can accept the path of the temp directory as its `base` argument.
 
 ```javascript
 box.run(base => {
   fs.writeFileSync(path.join(base, 'foo.txt'), 'hello', 'utf8');
-  fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // -> error
+  fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // Fails
 });
 ```
 
@@ -123,9 +151,9 @@ let flavor = await box.run(async base => {
 });
 ```
 
-### `(clonebox).snapshot()`
+### `.snapshot()`
 
-Reads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents.
+Reads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents. It doesn't provide any information about directories, only the files.
 
 Supposing you had the following files:
 
@@ -143,12 +171,9 @@ The snapshot might look like this:
 }
 ```
 
-Limitation:
-* It doesn't provide any information about directories, only the files.
-
 ### `encodings` option
 
-The `clonebox` function accepts an `encodings` option where you can specify how various file types are loaded into its snapshots.
+The `clonebox` function accepts an `encodings` option in which you can specify how various file types are loaded into the snapshots. The default is `'utf8'`.
 
 ```javascript
 const box = clonebox({
@@ -159,7 +184,7 @@ const box = clonebox({
 });
 ```
 
-If you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would appear in the snapshot as a base64-encoded string:
+If you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would be base64-encoded in the snapshot:
 
 ```json
 {
@@ -169,7 +194,7 @@ If you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would ap
 }
 ```
 
-### `(clonebox).diff()`
+### `.diff()`
 
 Reports which files were created, modified, and removed from the temp directory between snapshots.
 
@@ -186,9 +211,6 @@ const diffs = box.diff(before, after);
 ```
 
 Now `diffs` holds an object with four properties -- `created`, `modified`, `removed`, and `unchanged` -- each of which holds an array of filenames (but not the files' contents).
-
-Limitation:
-* It doesn't know about renaming. The old name will be in `deleted` and the new name will be in `created`.
 
 ```json
 {
@@ -208,20 +230,4 @@ Limitation:
 }
 ```
 
-## Notes
-
-* Several sandboxed `fs` methods are not yet tested.
-
-* The `access` methods don't write, but they're sandboxed anyway, because the way the
-methods provide information is by whether they issue errors or not. The sandboxed versions are aware of the `mode` argument and sandbox accordingly.
-
-* The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods *are* aware of the string values, and prevent the use of string flags that potentially write, append, etc.
-
-* The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
-
-* Methods that change ownership are sandboxed but untested, because they
-require elevated privileges.
-
-* Methods that expect file descriptors instead of paths can't be sandboxed.
-
-* Methods that only read from the filesystem but don't write are not sandboxed.
+It doesn't know about renaming. The old name will be in `deleted` and the new name will be in `created`.
