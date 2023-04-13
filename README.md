@@ -125,7 +125,7 @@ So if you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would
 }
 ```
 
-### `(clonebox).diff`
+### `(clonebox).diff()`
 
 Reports which files were created, modified, and removed from the temp directory between snapshots.
 
@@ -141,19 +141,21 @@ const after = box.snapshot();
 const diffs = box.diff(before, after);
 ```
 
-`diffs` now holds an object with three properties `created`, `modified`, and `removed`, each of which holds an array.
+`diffs` now holds an object with three properties `created`, `modified`, and `removed`, each of which holds an array of filenames (but not the files' contents).
 
 ```json
 {
-  created: [
-    // the files that are in after but not in before
+  "created": [
+    "images/photo.jpg",
+    "images/icon.png"
   ],
-  modified: [
-  	// the files whose contents differ between before and after
+  "modified": [
+  	"scripts/bundle.js"
   ],
-  removed: [
-    // the files that are in before but not in after
-  ],
+  "removed": [
+		"scripts/foo.js",
+		"styles/bar.css"
+  ]
 }
 ```
 
