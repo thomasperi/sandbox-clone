@@ -3,12 +3,12 @@ const os = require('os'); // eslint-disable-line no-unused-vars
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const path = require('path'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { clonebox, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
+const { Clonebox, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
 const tmp = os.tmpdir();
 const source = path.join(__dirname, 'test-clonebox');
 
-describe('clonebox tests', async () => {
+describe('Clonebox tests', async () => {
 
 	/*
 	
@@ -16,7 +16,7 @@ describe('clonebox tests', async () => {
 	still gets deleted even if the test fails.
 	
 	it('should do things right', async () => {
-		const box = clonebox({source});
+		const box = new Clonebox({source});
 		try {
 			// Assertions go inside the try
 		} finally {
@@ -27,7 +27,7 @@ describe('clonebox tests', async () => {
 	*/
 
 	it('should create empty clone directory and destroy it', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		try {
 			const base = box.base();
 			const baseRel = path.relative(tmp, base);
@@ -49,7 +49,7 @@ describe('clonebox tests', async () => {
 		try {
 
 			// A fake test that always throws.
-			const box = clonebox();
+			const box = new Clonebox();
 			base = box.base();
 			try {
 				throw 'test';
@@ -67,7 +67,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should clone the source directory and snapshot the temp directory', async () => {
-		const box = clonebox({source});
+		const box = new Clonebox({source});
 		try {
 			const base = box.base();
 			const baseRel = path.relative(tmp, base);
@@ -95,7 +95,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should use the encodings option', async () => {
-		const box = clonebox({
+		const box = new Clonebox({
 			source,
 			encodings: {
 				'.fakeimage': 'base64'
@@ -113,7 +113,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should be sandboxed during -- and only during -- `run`', async () => {
-		const box = clonebox({source});
+		const box = new Clonebox({source});
 		try {
 			const base = box.base();
 			const outsideFile = path.join(base, '../bad-file.txt');
@@ -150,7 +150,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should `run` an async function', async () => {
-		const box = clonebox({source});
+		const box = new Clonebox({source});
 		try {
 			const base = box.base();
 			const outsideFile = path.join(base, '../bad-file.txt');
@@ -185,7 +185,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should diff snapshots', async () => {
-		const box = clonebox({source});
+		const box = new Clonebox({source});
 		try {
 			const before = box.snapshot();
 			
@@ -211,26 +211,26 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should allow base() after destroy()', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		const base = box.base();
 		box.destroy();
 		assert.equal(box.base(), base);
 	});
 
 	it('should allow destroy() after destroy()', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		box.destroy();
 		box.destroy();
 	});
 	
 	it('should allow diff() after destroy()', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		box.destroy();
 		box.diff({}, {});
 	});
 	
 	it('should not allow snapshot() after destroy()', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		box.destroy();
 		let snapshotFailed = false;
 		try {
@@ -242,7 +242,7 @@ describe('clonebox tests', async () => {
 	});
 
 	it('should not allow run() after destroy()', async () => {
-		const box = clonebox();
+		const box = new Clonebox();
 		box.destroy();
 		let runFailed = false;
 		try {

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { sandbox, unbox } = require('./sandbox.js');
 
-function clonebox({source, encodings} = {}) {
+function Clonebox({source, encodings} = {}) {
 	const prefix = path.join(os.tmpdir(), 'clonebox-');
 	const dtemp = fs.mkdtempSync(prefix);
 	const cloneName = source ? path.basename(source) : 'base';
@@ -13,30 +13,32 @@ function clonebox({source, encodings} = {}) {
 	
 	setup(source, base);
 	
-	return {
-		base: () => base,
-		snapshot: () => {
-			not(destroyed, 'snapshot');
-			return snapshot(base, encodings || {});
-		},
-		run: (fn) => {
-			not(destroyed, 'run');
-			return run(base, fn);
-		},
-		destroy: () => {
-			if (destroyed) {
-				return;
-			}
-			destroy(dtemp);
-			destroyed = true;
-		},
-		diff,
+	this.base = () => base;
+	
+	this.snapshot = () => {
+		not(destroyed, 'snapshot');
+		return snapshot(base, encodings || {});
 	};
+	
+	this.run = (fn) => {
+		not(destroyed, 'run');
+		return run(base, fn);
+	};
+	
+	this.destroy = () => {
+		if (destroyed) {
+			return;
+		}
+		destroy(dtemp);
+		destroyed = true;
+	};
+	
+	this.diff = diff;
 }
 
 function not(destroyed, method) {
 	if (destroyed) {
-		throw `can't ${method} a destroyed clonebox`;
+		throw `can't ${method} a destroyed Clonebox`;
 	}
 }
 
@@ -136,4 +138,4 @@ function diff(before, after) {
 	};
 }
 
-module.exports = { clonebox };
+module.exports = { Clonebox };

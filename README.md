@@ -3,7 +3,7 @@
 An experimental sandbox for reducing the risk of accidentally writing or deleting out-of-scope files during testing.
 
 ```javascript
-const { sandbox, unbox, isBoxed, clonebox } = require('sandbox-write');
+const { sandbox, unbox, isBoxed, Clonebox } = require('sandbox-write');
 ```
 
 * `sandbox()` monkey-patches the built-in Node.js `fs` module to prevent writing outside a specified set of directories.
@@ -12,7 +12,7 @@ const { sandbox, unbox, isBoxed, clonebox } = require('sandbox-write');
 
 * `isBoxed()` reports whether `fs` is sandboxed or not.
 
-* `clonebox()` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original. Returns an object with these methods:
+* `new Clonebox()` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original. Returns an object with these methods:
 
 	* `.base()` returns the path of the temporary directory.
 
@@ -75,12 +75,12 @@ console.log(isBoxed()); // -> false
 - The real `chown` methods require elevated privileges, so the sandboxed versions are untested.
 
 
-## `clonebox()`
+## `new Clonebox()`
 
 Clones a directory for file manipulation during tests. Returns an object with methods for managing the directory.
 
 ```javascript
-const box = clonebox({
+const box = new Clonebox({
   source: '/path/to/my-test'
 });
 ```
@@ -93,16 +93,16 @@ The `base()` method returns the path of the temporary clone. The directory will 
 console.log(box.base()); // -> "/tmp/clonebox-49MaGJ/my-test"
 ```
 
-If you omit the `source` option to `clonebox`, an empty directory is created instead of an existing one being cloned. The temporary path will end with the name `base`.
+If you omit the `source` option, an empty directory is created instead of an existing one being cloned. The temporary path will end with the name `base`.
 
 ```javascript
-const box = clonebox(); // No `source` option
+const box = new Clonebox(); // No `source` option
 console.log(box.base()); // -> "/tmp/clonebox-We2MRT/base"
 ```
 
 ### `.destroy()`
 
-Deletes this clonebox's temporary directory:
+Deletes this `Clonebox`'s temporary directory:
 
 ```javascript
 box.destroy();
@@ -111,8 +111,8 @@ box.destroy();
 You should use `try`...`finally` (without `catch`) to ensure that the temp directory is deleted even when the test fails.
 
 ```javascript
-const box = clonebox();
-// Nothing between `clonebox()` and `try`.
+const box = new Clonebox();
+// Nothing between here and `try`.
 try {
   // Tests and assertions should go here inside the `try` block.
 } finally {
@@ -173,10 +173,10 @@ With the following files...
 
 ### `encodings` option
 
-The `clonebox` function accepts an `encodings` option in which you can specify how various file types are loaded into the snapshots. The default is `'utf8'`.
+The `Clonebox` constructor accepts an `encodings` option in which you can specify how various file types are loaded into the snapshots. The default is `'utf8'`.
 
 ```javascript
-const box = clonebox({
+const box = new Clonebox({
   source: '/path/to/my-test',
   encodings: {
     gif: 'base64'
@@ -199,7 +199,7 @@ If you have a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it'll be b
 Reports which files were created, modified, and removed from the temp directory between snapshots.
 
 ```javascript
-const box = clonebox({
+const box = new Clonebox({
   source: '/path/to/my-test'
 });
 const before = box.snapshot();
