@@ -5,7 +5,7 @@ const path = require('path'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
-const sandboxDir = path.join(__dirname, 'test-isBoxed');
+const sandboxDir = __dirname;
 
 describe('clonebox tests', async () => {
 
