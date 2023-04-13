@@ -20,15 +20,15 @@ An experimental filesystem sandbox for reducing the risk of accidentally writing
 (try/catch blocks omitted for brevity and clarity)
 
 ```javascript
-const { sandbox, unbox } = require(...);
+const { W_OK } = fs.constants;
 sandbox('/foo/bar', '/foo/sbor');
-await fs.access('/foo/bar/zote.txt'); // succeeds
-await fs.access('/foo/sbor/thed.txt'); // succeeds
-await fs.access('/foo/sneg/baz.txt'); // fails
-await fs.access('/boo/far.txt'); // fails
+fs.accessSync('/foo/bar/zote.txt', W_OK); // succeeds
+fs.accessSync('/foo/sbor/thed.txt', W_OK); // succeeds
+fs.accessSync('/foo/sneg/baz.txt', W_OK); // fails
+fs.accessSync('/boo/far.txt', W_OK); // fails
 unbox(); 
-await fs.access('/foo/sneg/baz.txt'); // succeeds now
-await fs.access('/boo/far.txt'); // succeeds now
+fs.accessSync('/foo/sneg/baz.txt', W_OK); // succeeds now
+fs.accessSync('/boo/far.txt', W_OK); // succeeds now
 ```
 
 ## `clonebox()`
