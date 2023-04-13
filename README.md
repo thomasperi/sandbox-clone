@@ -1,6 +1,6 @@
 # sandbox-write
 
-An experimental sandbox for reducing the risk of accidentally writing out-of-scope files during testing.
+An experimental sandbox for reducing the risk of accidentally writing or deleting out-of-scope files during testing.
 
 ```javascript
 const { sandbox, unbox, isBoxed, clonebox } = require('sandbox-write');
@@ -60,19 +60,19 @@ console.log(isBoxed()); // -> false
 
 ### Notes about the sandboxed `fs` methods:
 
-- Several methods are not yet tested.
-
-- The real `access` methods don't write to the filesystem, but they're sandboxed anyway, because the methods provide information about what can and can't be written by either issuing an error or not. The sandboxed versions are aware of the `mode` argument and sandbox accordingly.
-
-- The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods *are* aware of the string flags (`'a'`, `'a+'`, `'as'`, etc.) and sandbox accordingly.
-
-- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
-
-- The real `chown` methods are sandboxed but untested, because they require elevated privileges.
+- Several sandboxed methods are not yet tested.
 
 - Methods that expect file descriptors instead of paths can't be sandboxed.
 
-- Methods that only read from the filesystem but don't write are not sandboxed.
+- Methods that only read from the filesystem but don't write aren't sandboxed.
+
+  - Exception: The `access` methods don't write to the filesystem, but are sandboxed anyway, because the way they work is by either issuing an error or not. Therefore the sandboxed versions are aware of the `mode` argument and only reject on `fs.constants.W_OK`.
+
+- The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. They *are* aware of the string values (`'a'`, `'a+'`, `'as'`, etc.) however, and reject the ones that allow writing.
+
+- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
+
+- The real `chown` methods require elevated privileges, so the sandboxed versions are untested.
 
 
 ## `clonebox()`
@@ -155,14 +155,14 @@ let flavor = await box.run(async base => {
 
 Reads the contents of the temp directory into a JavaScript object for analysis. The keys are the files' pathnames relative to `base`, and the values are the files' contents. It doesn't provide any information about directories, only the files.
 
-Supposing you had the following files:
+With the following files...
 
 ```
 /tmp/clonebox-49MaGJ/my-test/scripts/foo.js
 /tmp/clonebox-49MaGJ/my-test/styles/bar.css
 ```
 
-The snapshot might look like this:
+...the snapshot might look like this:
 
 ```json
 {
@@ -184,7 +184,7 @@ const box = clonebox({
 });
 ```
 
-If you had a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it would be base64-encoded in the snapshot:
+If you have a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it'll be base64-encoded in the snapshot:
 
 ```json
 {
