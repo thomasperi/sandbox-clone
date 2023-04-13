@@ -201,6 +201,7 @@ describe('clonebox tests', async () => {
 				created: [ 'bar/sneg.txt' ],
 				modified: [ 'bar/sbor/thed' ],
 				removed: [ 'foo.txt' ],
+				unchanged: [ 'bar/zote.fakeimage' ],
 			};
 			assert.deepEqual(actualDiff, expectedDiff);
 			

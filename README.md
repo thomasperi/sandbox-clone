@@ -1,6 +1,6 @@
 # sandbox-write
 
-An experimental filesystem sandbox for reducing the risk of accidentally writing out-of-scope files during testing.
+An experimental sandbox for reducing the risk of accidentally writing out-of-scope files during testing.
 
 * `sandbox` monkey-patches the Node.js `fs` to prevent writing outside a specified set of directories.
 
@@ -10,7 +10,7 @@ An experimental filesystem sandbox for reducing the risk of accidentally writing
 
 * `(clonebox).run` sandboxes the `clonebox` temp directory while a specified function runs, then restores the real `fs`.
 
-* `(clonebox).snapshot` loads the contents of the cloned directory into a JavaScript object for analysis.
+* `(clonebox).snapshot` loads the current contents of the cloned directory into a JavaScript object for later analysis.
 
 * `(clonebox).diff` finds differences between snapshots.
 
@@ -34,6 +34,18 @@ unbox();
 
 fs.accessSync('/foo/sneg/baz.txt', W_OK); // succeeds now
 fs.accessSync('/boo/far.txt', W_OK); // succeeds now
+```
+
+### `isBoxed()`
+
+Reports whether sandboxing is in effect.
+
+```javascript
+console.log(isBoxed()); // -> false
+sandbox('/foo/bar');
+console.log(isBoxed()); // -> true
+unbox();
+console.log(isBoxed()); // -> false
 ```
 
 ## `clonebox()`
@@ -68,15 +80,18 @@ Deletes this clonebox's temporary directory:
 box.destroy();
 ```
 
-You should use `try`...`finally` to ensure that the temp directory is deleted even when the test fails.
+You should use `try`...`finally` (without `catch`) to ensure that the temp directory is deleted even when the test fails.
 
 ```javascript
-const box = clonebox({source});
+const box = clonebox();
+// Nothing between `clonebox()` and `try`.
 try {
-  // Assertions go inside the try
+  // Tests and assertions should go here inside the `try` block.
 } finally {
+  // No tests or assertions in the `finally` block.
   box.destroy();
 }
+// Assertions can also go after the `finally` block.
 ```
 
 ### `(clonebox).run(fn)`
@@ -128,6 +143,9 @@ The snapshot might look like this:
 }
 ```
 
+Limitation:
+* It doesn't provide any information about directories, only the files.
+
 ### `encodings` option
 
 The `clonebox` function accepts an `encodings` option where you can specify how various file types are loaded into its snapshots.
@@ -167,7 +185,10 @@ const after = box.snapshot();
 const diffs = box.diff(before, after);
 ```
 
-Now `diffs` holds an object with three properties -- `created`, `modified`, and `removed` -- each of which holds an array of filenames (but not the files' contents).
+Now `diffs` holds an object with four properties -- `created`, `modified`, `removed`, and `unchanged` -- each of which holds an array of filenames (but not the files' contents).
+
+Limitation:
+* It doesn't know about renaming. The old name will be in `deleted` and the new name will be in `created`.
 
 ```json
 {
@@ -176,21 +197,23 @@ Now `diffs` holds an object with three properties -- `created`, `modified`, and 
     "images/photo.jpg"
   ],
   "modified": [
-    "scripts/foo.js",
     "styles/bar.css"
   ],
   "removed": [
     "images/pixel.gif"
+  ],
+  "unchanged": [
+    "scripts/foo.js"
   ]
 }
 ```
 
 ## Notes
 
-* Several patched `fs` methods are not yet tested.
+* Several sandboxed `fs` methods are not yet tested.
 
 * The `access` methods don't write, but they're sandboxed anyway, because the way the
-methods provide information is by issuing errors. The patched versions are aware of the `mode` argument and sandbox accordingly.
+methods provide information is by whether they issue errors or not. The sandboxed versions are aware of the `mode` argument and sandbox accordingly.
 
 * The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. I haven't spent the time to understand exactly which combinations would result in a file possibly being written, and so it doesn't even try. The methods *are* aware of the string values, and prevent the use of string flags that potentially write, append, etc.
 

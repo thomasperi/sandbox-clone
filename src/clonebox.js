@@ -99,9 +99,10 @@ function destroy(dtemp) {
 }
 
 function diff(before, after) {
+	const created = [];
 	const modified = [];
 	const removed = [];
-	const created = [];
+	const unchanged = [];
 
 	const beforeKeys = Object.keys(before);
 	const afterKeys = Object.keys(after);
@@ -120,15 +121,18 @@ function diff(before, after) {
 		}
 	}
 	for (const key of commonKeys) {
-		if (before[key] !== after[key]) {
+		if (before[key] === after[key]) {
+			unchanged.push(key);
+		} else {
 			modified.push(key);
 		}
 	}
 
 	return {
+		created,
 		modified,
 		removed,
-		created,
+		unchanged,
 	};
 }
 
