@@ -1,19 +1,8 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles, sandboxDir, goodFile, badFile } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
-
-const goodToGood = `${goodFile}-link-to-good`;
-const badToGood = `${badFile}-link-to-good`;
-const goodToBad = `${goodFile}-link-to-bad`;
-const badToBad = `${badFile}-link-to-bad`;
-
-function makeLinks() {
-	fs.symlinkSync(goodFile, goodToGood);
-	fs.symlinkSync(goodFile, badToGood);
-	fs.symlinkSync(badFile, goodToBad);
-	fs.symlinkSync(badFile, badToBad);
-}
+const { describeMany, they, withTempFiles, sandboxDir, files } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { goodFile, badFile, goodToGood, badToGood, goodToBad, badToBad } = files; // eslint-disable-line no-unused-vars
 
 // The utimes methods expect atime and mtime to be in seconds,
 // but the stat methods return it in milliseconds.
@@ -30,8 +19,6 @@ describeMany(
 
 	they('should succeed on a good link to a good file', async (__method__) => {
 		await withTempFiles(async () => {
-			makeLinks();
-			
 			sandbox(sandboxDir);
 			const result = await __method__(goodToGood, atime, mtime);
 			unbox();
@@ -46,8 +33,6 @@ describeMany(
 
 	they('should succeed on a good link to a bad file', async (__method__) => {
 		await withTempFiles(async () => {
-			makeLinks();
-			
 			sandbox(sandboxDir);
 			const result = await __method__(goodToBad, atime, mtime);
 			unbox();
@@ -62,7 +47,6 @@ describeMany(
 
 	they('should fail on a bad link to a good file', async (__method__) => {
 		await withTempFiles(async () => {
-			makeLinks();
 			const oldStat = fs.lstatSync(badToGood);
 			
 			sandbox(sandboxDir);
@@ -79,7 +63,6 @@ describeMany(
 
 	they('should fail on a bad link to a bad file', async (__method__) => {
 		await withTempFiles(async () => {
-			makeLinks();
 			const oldStat = fs.lstatSync(badToBad);
 			
 			sandbox(sandboxDir);

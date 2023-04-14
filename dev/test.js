@@ -6,8 +6,16 @@ const path = require('path').posix;
 const tmp = os.tmpdir();
 const testDir = path.join(tmp, 'test-sandbox-fs');
 const sandboxDir = path.join(testDir, 'the-sandbox');
-const goodFile = path.join(sandboxDir, 'good-file');
-const badFile = path.join(testDir, 'bad-file');
+const good = path.join(sandboxDir, 'good');
+const bad = path.join(testDir, 'bad');
+const files = {
+	goodFile: `${good}-file`,
+	badFile: `${bad}-file`,
+	goodToGood: `${good}-link-to-good-file`,
+	badToGood: `${bad}-link-to-good-file`,
+	goodToBad: `${good}-link-to-bad-file`,
+	badToBad: `${bad}-link-to-bad-file`,
+};
 
 async function withTempFiles(fn) {
 	if (fs.existsSync(testDir)) {
@@ -15,8 +23,15 @@ async function withTempFiles(fn) {
 	}
 	try {
 		fs.mkdirSync(sandboxDir, {recursive: true});
-		fs.writeFileSync(goodFile, 'good', 'utf8');
-		fs.writeFileSync(badFile, 'bad', 'utf8');
+		
+		fs.writeFileSync(files.goodFile, 'good', 'utf8');
+		fs.writeFileSync(files.badFile, 'bad', 'utf8');
+
+		fs.symlinkSync(files.goodFile, files.goodToGood);
+		fs.symlinkSync(files.goodFile, files.badToGood);
+		fs.symlinkSync(files.badFile, files.goodToBad);
+		fs.symlinkSync(files.badFile, files.badToBad);
+
 		await fn(sandboxDir);
 	} finally {
 		fs.rmSync(testDir, {recursive: true, force: true});
@@ -90,8 +105,7 @@ function makeIt(methodName, methodType, itFn) {
 
 module.exports = {
 	sandboxDir,
-	goodFile,
-	badFile,
+	files,
 	describeMany,
 	they,
 	withTempFiles,
