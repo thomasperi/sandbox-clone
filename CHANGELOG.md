@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2023-04-14
+
+### Fixed
+
+- Fixed package.json `files` property.
+
 ## [1.0.0] - 2023-04-14
 
-[unreleased]: https://github.com/thomasperi/sandbox-clone/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/thomasperi/sandbox-clone/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/thomasperi/sandbox-clone/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/thomasperi/sandbox-clone/releases/tag/v1.0.0
