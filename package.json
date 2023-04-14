@@ -1,5 +1,5 @@
 {
-  "name": "sandbox-write",
+  "name": "sandbox-clone",
   "version": "1.0.0",
   "description": "An experimental library for limiting fs write access during testing",
   "main": "index.js",
@@ -7,12 +7,12 @@
   "scripts": {
     "test": "npx mocha"
   },
-  "keywords": [],
+  "keywords": ["fs", "monkey-patch", "sandbox", "test", "testing", "write"],
   "author": "Thomas Peri <hello@thomasperi.net>",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thomasperi/sandbox-write.git"
+    "url": "https://github.com/thomasperi/sandbox-clone.git"
   },
   "devDependencies": {
     "chokidar": "^3.5.3",

@@ -3,12 +3,12 @@ const os = require('os'); // eslint-disable-line no-unused-vars
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const path = require('path'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
-const { Clonebox, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
+const { Clone, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
 const tmp = os.tmpdir();
-const source = path.join(__dirname, 'test-clonebox');
+const source = path.join(__dirname, 'test-Clone');
 
-describe('Clonebox tests', async () => {
+describe('Clone tests', async () => {
 
 	/*
 	
@@ -16,28 +16,28 @@ describe('Clonebox tests', async () => {
 	still gets deleted even if the test fails.
 	
 	it('should do things right', async () => {
-		const box = new Clonebox({source});
+		const clone = new Clone({source});
 		try {
 			// Assertions go inside the try
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	*/
 
 	it('should create empty clone directory and destroy it', async () => {
-		const box = new Clonebox();
+		const clone = new Clone();
 		try {
-			const base = box.base();
+			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/clonebox-.{6}\/base/.test(baseRel), 'temp base path should match pattern');
+			assert(/clone-.{6}\/base/.test(baseRel), 'temp base path should match pattern');
 			assert(fs.existsSync(base), 'temp base should exist');
 			assert(fs.statSync(base).isDirectory(), 'temp base should be a directory');
 			assert(fs.readdirSync(base).length === 0, 'temp base directory should be empty');
 
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
@@ -49,12 +49,12 @@ describe('Clonebox tests', async () => {
 		try {
 
 			// A fake test that always throws.
-			const box = new Clonebox();
-			base = box.base();
+			const clone = new Clone();
+			base = clone.base();
 			try {
 				throw 'test';
 			} finally {
-				box.destroy();
+				clone.destroy();
 			}
 		
 		} catch (e) {
@@ -67,13 +67,13 @@ describe('Clonebox tests', async () => {
 	});
 
 	it('should clone the source directory and snapshot the temp directory', async () => {
-		const box = new Clonebox({source});
+		const clone = new Clone({source});
 		try {
-			const base = box.base();
+			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/clonebox-.{6}\/test-clonebox/.test(baseRel), 'temp base path should match pattern');
+			assert(/clone-.{6}\/test-Clone/.test(baseRel), 'temp base path should match pattern');
 		
-			const snap = box.snapshot();
+			const snap = clone.snapshot();
 			const expectedSnap = {
 				'bar/sbor/thed': 'thed',
 				'bar/zote.fakeimage': 'zote',
@@ -90,32 +90,32 @@ describe('Clonebox tests', async () => {
 			assert.equal(thed, 'thed', 'thed copy should have same content as original');
 		
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	it('should use the encodings option', async () => {
-		const box = new Clonebox({
+		const clone = new Clone({
 			source,
 			encodings: {
 				'.fakeimage': 'base64'
 			},
 		});
 		try {
-			const snap = box.snapshot();
+			const snap = clone.snapshot();
 			const zotePath = 'bar/zote.fakeimage';
 			const zoteBase64 = 'em90ZQ==';
 			assert.deepEqual(snap[zotePath], zoteBase64, 'fakeimage should be base64-encoded');
 			
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	it('should be sandboxed during -- and only during -- `run`', async () => {
-		const box = new Clonebox({source});
+		const clone = new Clone({source});
 		try {
-			const base = box.base();
+			const base = clone.base();
 			const outsideFile = path.join(base, '../bad-file.txt');
 			const okContent = 'ok when unsandboxed';
 			const notOkContent = 'not ok when sandboxed';
@@ -125,7 +125,7 @@ describe('Clonebox tests', async () => {
 		
 			fs.writeFileSync(outsideFile, okContent, 'utf8');
 
-			const result = box.run(argBase => {
+			const result = clone.run(argBase => {
 				assert(isBoxed());
 				runBase = argBase;
 				try {
@@ -140,19 +140,19 @@ describe('Clonebox tests', async () => {
 			assert.equal(result, 'ran');
 			
 			let actualContent = fs.readFileSync(outsideFile, 'utf8');
-			assert.equal(runBase, base, 'the run function should receive the same value that box.base() returns');
+			assert.equal(runBase, base, 'the run function should receive the same value that clone.base() returns');
 			assert(writeFailed, 'sandbox should have prevented writing the outside file');
 			assert.equal(actualContent, okContent, 'outside file should still have ok content');
 
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	it('should `run` an async function', async () => {
-		const box = new Clonebox({source});
+		const clone = new Clone({source});
 		try {
-			const base = box.base();
+			const base = clone.base();
 			const outsideFile = path.join(base, '../bad-file.txt');
 			const okContent = 'ok when unsandboxed';
 			const notOkContent = 'not ok when sandboxed';
@@ -162,7 +162,7 @@ describe('Clonebox tests', async () => {
 		
 			fs.writeFileSync(outsideFile, okContent, 'utf8');
 
-			const result = await box.run(async argBase => {
+			const result = await clone.run(async argBase => {
 				runBase = argBase;
 				try {
 					await fs.promises.writeFile(outsideFile, notOkContent, 'utf8');
@@ -175,28 +175,28 @@ describe('Clonebox tests', async () => {
 			assert.equal(result, 'ran async! amazing!');
 			
 			let actualContent = fs.readFileSync(outsideFile, 'utf8');
-			assert.equal(runBase, base, 'the run function should receive the same value that box.base() returns');
+			assert.equal(runBase, base, 'the run function should receive the same value that clone.base() returns');
 			assert(writeFailed, 'sandbox should have prevented writing the outside file');
 			assert.equal(actualContent, okContent, 'outside file should still have ok content');
 
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	it('should diff snapshots', async () => {
-		const box = new Clonebox({source});
+		const clone = new Clone({source});
 		try {
-			const before = box.snapshot();
+			const before = clone.snapshot();
 			
-			box.run(base => {
+			clone.run(base => {
 				fs.writeFileSync(path.join(base, 'bar/sneg.txt'), 'sneg', 'utf8');
 				fs.writeFileSync(path.join(base, 'bar/sbor/thed'), 'thed 2.0', 'utf8');
 				fs.rmSync(path.join(base, 'foo.txt'));
 			});
 			
-			const after = box.snapshot();
-			const actualDiff = box.diff(before, after);
+			const after = clone.snapshot();
+			const actualDiff = clone.diff(before, after);
 			const expectedDiff = {
 				created: [ 'bar/sneg.txt' ],
 				modified: [ 'bar/sbor/thed' ],
@@ -206,35 +206,35 @@ describe('Clonebox tests', async () => {
 			assert.deepEqual(actualDiff, expectedDiff);
 			
 		} finally {
-			box.destroy();
+			clone.destroy();
 		}
 	});
 
 	it('should allow base() after destroy()', async () => {
-		const box = new Clonebox();
-		const base = box.base();
-		box.destroy();
-		assert.equal(box.base(), base);
+		const clone = new Clone();
+		const base = clone.base();
+		clone.destroy();
+		assert.equal(clone.base(), base);
 	});
 
 	it('should allow destroy() after destroy()', async () => {
-		const box = new Clonebox();
-		box.destroy();
-		box.destroy();
+		const clone = new Clone();
+		clone.destroy();
+		clone.destroy();
 	});
 	
 	it('should allow diff() after destroy()', async () => {
-		const box = new Clonebox();
-		box.destroy();
-		box.diff({}, {});
+		const clone = new Clone();
+		clone.destroy();
+		clone.diff({}, {});
 	});
 	
 	it('should not allow snapshot() after destroy()', async () => {
-		const box = new Clonebox();
-		box.destroy();
+		const clone = new Clone();
+		clone.destroy();
 		let snapshotFailed = false;
 		try {
-			box.snapshot();
+			clone.snapshot();
 		} catch (e) {
 			snapshotFailed = true;
 		}
@@ -242,11 +242,11 @@ describe('Clonebox tests', async () => {
 	});
 
 	it('should not allow run() after destroy()', async () => {
-		const box = new Clonebox();
-		box.destroy();
+		const clone = new Clone();
+		clone.destroy();
 		let runFailed = false;
 		try {
-			box.run(() => {});
+			clone.run(() => {});
 		} catch (e) {
 			runFailed = true;
 		}

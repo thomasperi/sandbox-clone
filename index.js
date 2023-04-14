@@ -1,4 +1,4 @@
 const { sandbox, unbox, isBoxed } = require('./src/sandbox.js');
-const { Clonebox } = require('./src/Clonebox.js');
+const { Clone } = require('./src/Clone.js');
 
-module.exports = { sandbox, unbox, isBoxed, Clonebox };
+module.exports = { sandbox, unbox, isBoxed, Clone };

@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const { sandbox, unbox } = require('./sandbox.js');
 
-function Clonebox({source, encodings} = {}) {
-	const prefix = path.join(os.tmpdir(), 'clonebox-');
+function Clone({source, encodings} = {}) {
+	const prefix = path.join(os.tmpdir(), 'clone-');
 	const dtemp = fs.mkdtempSync(prefix);
 	const cloneName = source ? path.basename(source) : 'base';
 	const base = path.join(dtemp, cloneName);
@@ -38,7 +38,7 @@ function Clonebox({source, encodings} = {}) {
 
 function not(destroyed, method) {
 	if (destroyed) {
-		throw `can't ${method} a destroyed Clonebox`;
+		throw `can't ${method} a destroyed Clone`;
 	}
 }
 
@@ -138,4 +138,4 @@ function diff(before, after) {
 	};
 }
 
-module.exports = { Clonebox };
+module.exports = { Clone };

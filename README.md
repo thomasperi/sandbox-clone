@@ -1,18 +1,18 @@
-# sandbox-write
+# sandbox-clone
 
 An experimental sandbox for reducing the risk of accidentally writing or deleting out-of-scope files during testing.
 
 ```javascript
-const { sandbox, unbox, isBoxed, Clonebox } = require('sandbox-write');
+const { sandbox, unbox, isBoxed, Clone } = require('sandbox-clone');
 ```
 
-* `sandbox()` monkey-patches the built-in Node.js `fs` module to prevent writing outside a specified set of directories.
+* `sandbox()` monkey-patches the built-in Node.js `fs` module to limit writing outside a specified set of directories.
 
 * `unbox()` restores original un-sandboxed state.
 
 * `isBoxed()` reports whether `fs` is sandboxed or not.
 
-* `new Clonebox()` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original. Returns an object with these methods:
+* `new Clone()` clones a directory into a temporary directory so that tests can manipulate the clone without modifying the original. Returns an object with these methods:
 
 	* `.base()` returns the path of the temporary directory.
 
@@ -75,12 +75,12 @@ console.log(isBoxed()); // -> false
 - The real `chown` methods require elevated privileges, so the sandboxed versions are untested.
 
 
-## `new Clonebox()`
+## `new Clone()`
 
 Clones a directory for file manipulation during tests. Returns an object with methods for managing the directory.
 
 ```javascript
-const box = new Clonebox({
+const clone = new Clone({
   source: '/path/to/my-test'
 });
 ```
@@ -90,34 +90,34 @@ const box = new Clonebox({
 The `base()` method returns the path of the temporary clone. The directory will have the same basename as the original (`my-test` in this example).
 
 ```javascript
-console.log(box.base()); // -> "/tmp/clonebox-49MaGJ/my-test"
+console.log(clone.base()); // -> "/tmp/clonebox-49MaGJ/my-test"
 ```
 
 If you omit the `source` option, an empty directory is created instead of an existing one being cloned. The temporary path will end with the name `base`.
 
 ```javascript
-const box = new Clonebox(); // No `source` option
-console.log(box.base()); // -> "/tmp/clonebox-We2MRT/base"
+const clone = new Clone(); // No `source` option
+console.log(clone.base()); // -> "/tmp/clonebox-We2MRT/base"
 ```
 
 ### `.destroy()`
 
-Deletes this `Clonebox`'s temporary directory:
+Deletes this `Clone`'s temporary directory:
 
 ```javascript
-box.destroy();
+clone.destroy();
 ```
 
 You should use `try`...`finally` (without `catch`) to ensure that the temp directory is deleted even when the test fails.
 
 ```javascript
-const box = new Clonebox();
+const clone = new Clone();
 // Nothing between here and `try`.
 try {
   // Tests and assertions should go here inside the `try` block.
 } finally {
   // No tests or assertions in the `finally` block.
-  box.destroy();
+  clone.destroy();
 }
 // Assertions can also go after the `finally` block.
 ```
@@ -127,16 +127,16 @@ try {
 Sandboxes the temp directory, calls the supplied `fn` function, and then restores the real un-sandboxed `fs` methods. The `fn` function can accept the path of the temp directory as its `base` argument.
 
 ```javascript
-box.run(base => {
+clone.run(base => {
   fs.writeFileSync(path.join(base, 'foo.txt'), 'hello', 'utf8');
   fs.writeFileSync(path.join(base, '../bar.txt'), 'nope', 'utf8'); // Fails
 });
 ```
 
-The function's return value gets passed through as the return value of `box.run()`.
+The function's return value gets passed through as the return value of `clone.run()`.
 
 ```javascript
-let flavor = box.run(base => {
+let flavor = clone.run(base => {
   // ...
   return 'pineapple';
 });
@@ -145,7 +145,7 @@ let flavor = box.run(base => {
 It works with `await` / `async` too.
 
 ```javascript
-let flavor = await box.run(async base => {
+let flavor = await clone.run(async base => {
   // ...
   return 'asynchronous pineapple';
 });
@@ -173,10 +173,10 @@ With the following files...
 
 ### `encodings` option
 
-The `Clonebox` constructor accepts an `encodings` option in which you can specify how various file types are loaded into the snapshots. The default is `'utf8'`.
+The `Clone` constructor accepts an `encodings` option in which you can specify how various file types are loaded into the snapshots. The default is `'utf8'`.
 
 ```javascript
-const box = new Clonebox({
+const clone = new Clone({
   source: '/path/to/my-test',
   encodings: {
     gif: 'base64'
@@ -199,15 +199,15 @@ If you have a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it'll be b
 Reports which files were created, modified, and removed from the temp directory between snapshots.
 
 ```javascript
-const box = new Clonebox({
+const clone = new Clone({
   source: '/path/to/my-test'
 });
-const before = box.snapshot();
-box.run(base => {
+const before = clone.snapshot();
+clone.run(base => {
   // create, modify, and/or remove some files
 });
-const after = box.snapshot();
-const diffs = box.diff(before, after);
+const after = clone.snapshot();
+const diffs = clone.diff(before, after);
 ```
 
 Now `diffs` holds an object with four properties -- `created`, `modified`, `removed`, and `unchanged` -- each of which holds an array of filenames (but not the files' contents).
