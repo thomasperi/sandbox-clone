@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Some examples in README.md used an outdated naming convention.
+- Some Clone tests were too permissive.
 
 ## [1.0.1] - 2023-04-14
 

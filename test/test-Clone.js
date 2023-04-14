@@ -1,7 +1,7 @@
 /*global describe, it */
 const os = require('os'); // eslint-disable-line no-unused-vars
 const fs = require('fs'); // eslint-disable-line no-unused-vars
-const path = require('path'); // eslint-disable-line no-unused-vars
+const path = require('path').posix; // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { Clone, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
@@ -31,7 +31,7 @@ describe('Clone tests', async () => {
 		try {
 			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/clone-.{6}\/base/.test(baseRel), 'temp base path should match pattern');
+			assert(/^clone-.{6}\/base$/.test(baseRel), 'temp base path should match pattern');
 			assert(fs.existsSync(base), 'temp base should exist');
 			assert(fs.statSync(base).isDirectory(), 'temp base should be a directory');
 			assert(fs.readdirSync(base).length === 0, 'temp base directory should be empty');
@@ -71,7 +71,7 @@ describe('Clone tests', async () => {
 		try {
 			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/clone-.{6}\/test-Clone/.test(baseRel), 'temp base path should match pattern');
+			assert(/^clone-.{6}\/test-Clone$/.test(baseRel), 'temp base path should match pattern');
 		
 			const snap = clone.snapshot();
 			const expectedSnap = {
