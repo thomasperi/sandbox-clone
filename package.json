@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "An experimental library for limiting fs write access during testing",
   "main": "index.js",
-  "files": "src/*.js",
+  "files": [
+  	"src/*.js"
+  ],
   "scripts": {
     "test": "npx mocha"
   },
