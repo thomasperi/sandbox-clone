@@ -1,6 +1,6 @@
 {
   "name": "sandbox-clone",
-  "version": "1.0.0",
+  "version": "1.0.0@alpha",
   "description": "An experimental library for limiting fs write access during testing",
   "main": "index.js",
   "files": "src/*.js",
