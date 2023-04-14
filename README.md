@@ -2,6 +2,10 @@
 
 An experimental sandbox for reducing the risk of accidentally writing or deleting out-of-scope files during testing.
 
+```
+npm i -D sandbox-clone
+```
+
 ```javascript
 const { sandbox, unbox, isBoxed, Clone } = require('sandbox-clone');
 ```
@@ -90,14 +94,14 @@ const clone = new Clone({
 The `base()` method returns the path of the temporary clone. The directory will have the same basename as the original (`my-test` in this example).
 
 ```javascript
-console.log(clone.base()); // -> "/tmp/clonebox-49MaGJ/my-test"
+console.log(clone.base()); // -> "/tmp/clone-49MaGJ/my-test"
 ```
 
 If you omit the `source` option, an empty directory is created instead of an existing one being cloned. The temporary path will end with the name `base`.
 
 ```javascript
 const clone = new Clone(); // No `source` option
-console.log(clone.base()); // -> "/tmp/clonebox-We2MRT/base"
+console.log(clone.base()); // -> "/tmp/clone-We2MRT/base"
 ```
 
 ### `.destroy()`
@@ -158,8 +162,8 @@ Reads the contents of the temp directory into a JavaScript object for analysis. 
 With the following files...
 
 ```
-/tmp/clonebox-49MaGJ/my-test/scripts/foo.js
-/tmp/clonebox-49MaGJ/my-test/styles/bar.css
+/tmp/clone-49MaGJ/my-test/scripts/foo.js
+/tmp/clone-49MaGJ/my-test/styles/bar.css
 ```
 
 ...the snapshot might look like this:
@@ -184,7 +188,7 @@ const clone = new Clone({
 });
 ```
 
-If you have a gif at `/tmp/clonebox-49MaGJ/my-test/images/pixel.gif`, it'll be base64-encoded in the snapshot:
+If you have a gif at `/tmp/clone-49MaGJ/my-test/images/pixel.gif`, it'll be base64-encoded in the snapshot:
 
 ```json
 {
