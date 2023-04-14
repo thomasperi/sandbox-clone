@@ -1,10 +1,10 @@
 {
   "name": "sandbox-clone",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An experimental library for limiting fs write access during testing",
   "main": "index.js",
   "files": [
-  	"src/*.js"
+    "src/*.js"
   ],
   "scripts": {
     "test": "npx mocha"
