@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { promiseMethods, fsMethods } = require('./methods.js');
 
-let _isBoxed = false;
+let sandboxDirs = null;
 
 const realMembers = {promises: {}};
 for (const methodName of Object.keys(fsMethods)) {
@@ -12,25 +12,29 @@ for (const methodName of Object.keys(promiseMethods)) {
 	realMembers.promises[methodName] = fs.promises[methodName];
 }
 
+const fakeMembers = {promises: {}};
+for (const methodName of Object.keys(fsMethods)) {
+	fakeMembers[methodName] = createProxy(realMembers, fsMethods, methodName);
+}
+for (const methodName of Object.keys(promiseMethods)) {
+	fakeMembers.promises[methodName] = createProxy(realMembers.promises, promiseMethods, methodName);
+}
+
 function sandbox(...dirs) {
-	const fakeMembers = {promises: {}};
-	for (const methodName of Object.keys(fsMethods)) {
-		fakeMembers[methodName] = createProxy(realMembers, fsMethods, methodName, dirs);
+	if (sandboxDirs) {
+		throw 'already sandboxed';
 	}
-	for (const methodName of Object.keys(promiseMethods)) {
-		fakeMembers.promises[methodName] = createProxy(realMembers.promises, promiseMethods, methodName, dirs);
-	}
+	sandboxDirs = dirs;
 	assign(fakeMembers);
-	_isBoxed = true;
 }
 
 function unbox() {
 	assign(realMembers);
-	_isBoxed = false;
+	sandboxDirs = null;
 }
 
 function isBoxed() {
-	return _isBoxed;
+	return !!sandboxDirs;
 }
 
 function assign(members) {
@@ -42,26 +46,26 @@ function assign(members) {
 	}
 }
 
-function createProxy(realNamespace, methodPaths, methodName, sandboxDirs) {
+function createProxy(realNamespace, methodPaths, methodName) {
 	return function (...args) {
-		verifyArgs(methodPaths, methodName, sandboxDirs, args);
+		verifyArgs(methodPaths, methodName, args);
 		return realNamespace[methodName](...args);
 	};
 }
 
-function verifyArgs(methodPaths, methodName, sandboxDirs, args) {
+function verifyArgs(methodPaths, methodName, args) {
 	switch (methodName) {
 		case 'access':
 		case 'accessSync': {
 			if (args[1] & fs.constants.W_OK) {
-				verifyPath(args[0], sandboxDirs);
+				verifyPath(args[0]);
 			}
 			break;
 		}
 		case 'open':
 		case 'openSync': {
 			if (/[aw+]/i.test(args[1])) {
-				verifyPath(args[0], sandboxDirs);
+				verifyPath(args[0]);
 			}
 			break;
 		}
@@ -72,13 +76,13 @@ function verifyArgs(methodPaths, methodName, sandboxDirs, args) {
 				return [index - 1, expectsLink];
 			});
 			for (const [index, expectsLink] of indexes) {
-				verifyPath(args[index], sandboxDirs, expectsLink);
+				verifyPath(args[index], expectsLink);
 			}
 		}
 	}
 }
 
-function verifyPath(pathToVerify, sandboxDirs, expectsLink) {
+function verifyPath(pathToVerify, expectsLink) {
 	if (typeof pathToVerify === 'string') {
 		if (expectsLink) {
 			// If this path is expected to be a link,
