@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Some examples in README.md used an outdated naming convention.
 - (dev) Some Clone tests were too permissive.
 - Bugfix to how paths are verified with realpath.
+- Fixed bug that caused `cp` methods to misbehave.
 
 
 ## [1.0.1] - 2023-04-14
