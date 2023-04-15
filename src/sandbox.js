@@ -5,12 +5,7 @@ const { promiseMethods, fsMethods } = require('./methods.js');
 let sandboxDirs = null;
 
 const realMembers = {promises: {}};
-for (const methodName of Object.keys(fsMethods)) {
-	realMembers[methodName] = fs[methodName];
-}
-for (const methodName of Object.keys(promiseMethods)) {
-	realMembers.promises[methodName] = fs.promises[methodName];
-}
+assignMembers(fs, realMembers);
 
 const fakeMembers = {promises: {}};
 for (const methodName of Object.keys(fsMethods)) {
@@ -25,11 +20,11 @@ function sandbox(...dirs) {
 		throw 'already sandboxed';
 	}
 	sandboxDirs = dirs;
-	assign(fakeMembers);
+	assignMembers(fakeMembers, fs);
 }
 
 function unbox() {
-	assign(realMembers);
+	assignMembers(realMembers, fs);
 	sandboxDirs = null;
 }
 
@@ -37,12 +32,12 @@ function isBoxed() {
 	return !!sandboxDirs;
 }
 
-function assign(members) {
+function assignMembers(source, target) {
 	for (const methodName of Object.keys(fsMethods)) {
-		fs[methodName] = members[methodName];
+		target[methodName] = source[methodName];
 	}
 	for (const methodName of Object.keys(promiseMethods)) {
-		fs.promises[methodName] = members.promises[methodName];
+		target.promises[methodName] = source.promises[methodName];
 	}
 }
 
