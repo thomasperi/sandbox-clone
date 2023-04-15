@@ -17,7 +17,7 @@ for (const methodName of Object.keys(promiseMethods)) {
 
 function sandbox(...dirs) {
 	if (sandboxDirs) {
-		throw 'already sandboxed';
+		throw `already sandboxed to ${sandboxDirs.join(', ')}`;
 	}
 	sandboxDirs = dirs;
 	assignMembers(fakeMembers, fs);
