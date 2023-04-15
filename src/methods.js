@@ -3,31 +3,31 @@
 
 // Indices start at 1.
 
-// A negative index indicates that the argument is a symlink
-// whose own path should be verified without dereferencing.
+// A negative index indicates that the path's parent should be sandboxed instead,
+// for the case of symlinks that won't be dereferenced
 
-// See NOTES below for details on specific methods.
+// to-do: determine if any other methods should get negatives.
 
 const promiseMethods = {
-	access: [1], // (access)
+	access: [1],
 	appendFile: [1],
 	chmod: [1],
-	chown: [1], // (chown)
-	copyFile: [2],
-	cp: [2],
-	lchmod: [1], // (lchmod)
-	lchown: [1], // (chown)
+	chown: [1],
+	copyFile: [2], // follows existing dest symlink and replaces its realpath with a copy of src file
+	cp: [-2], // replaces existing dest symlink itself with a copy of src file
+	lchmod: [1],
+	lchown: [1],
 	lutimes: [-1],
 	link: [2],
 	mkdir: [1],
 	mkdtemp: [1],
 	open: [1],
-	rename: [1, 2],
+	rename: [1, -2], // replaces existing newPath symlink itself with file at oldPath
 	rmdir: [1],
 	rm: [1],
 	symlink: [2],
 	truncate: [1],
-	unlink: [1],
+	unlink: [-1],
 	utimes: [1],
 	writeFile: [1],
 };
@@ -35,50 +35,50 @@ const fsMethods = {
 	
 	// Callback API
 	
-	access: [1], // (access)
+	access: [1],
 	appendFile: [1],
 	chmod: [1],
-	chown: [1], // (chown)
-	copyFile: [2],
-	cp: [2],
+	chown: [1],
+	copyFile: [2], // see note in promise above
+	cp: [-2], // see note in promise above
 	createWriteStream: [1],
-	lchmod: [1], // (lchmod)
-	lchown: [1], // (chown)
+	lchmod: [1],
+	lchown: [1],
 	lutimes: [-1],
 	link: [2],
 	mkdir: [1],
 	mkdtemp: [1],
 	open: [1],
-	rename: [1, 2],
+	rename: [1, -2], // see note in promise above
 	rmdir: [1],
 	rm: [1],
 	symlink: [2],
 	truncate: [1],
-	unlink: [1],
+	unlink: [-1],
 	utimes: [1],
 	writeFile: [1],
 	
 	// Synchronous API
 	
-	accessSync: [1], // (access)
+	accessSync: [1],
 	appendFileSync: [1],
 	chmodSync: [1],
-	chownSync: [1], // (chown)
-	copyFileSync: [2],
-	cpSync: [2],
-	lchmodSync: [1], // (lchmod)
-	lchownSync: [1], // (chown)
+	chownSync: [1],
+	copyFileSync: [2], // see note in promise above
+	cpSync: [-2], // see note in promise above
+	lchmodSync: [1],
+	lchownSync: [1],
 	lutimesSync: [-1],
 	linkSync: [2],
 	mkdirSync: [1],
 	mkdtempSync: [1],
 	openSync: [1],
-	renameSync: [1, 2],
+	renameSync: [1, -2], // see note in promise above
 	rmdirSync: [1],
 	rmSync: [1],
 	symlinkSync: [2],
 	truncateSync: [1],
-	unlinkSync: [1],
+	unlinkSync: [-1],
 	utimesSync: [1],
 	writeFileSync: [1],
 };

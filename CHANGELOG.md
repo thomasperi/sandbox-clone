@@ -11,13 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - (dev) Tests now use a standard set of symlinks and unique temp directories.
+- (dev) Tests for more methods.
 
 ### Fixed
 
 - Some examples in README.md used an outdated naming convention.
 - (dev) Some Clone tests were too permissive.
 - Bugfix to how paths are verified with realpath.
-- Fixed bug that caused `cp` methods to misbehave.
+- The sandboxed methods themselves now check whether there are any sandbox directories set before enforcing the path restrictions. Not doing so was causing `cp` methods to misbehave, because `cp` apparently keeps references to the fs methods however it first finds them.
+- More sandboxed methods now correctly don't dereference symlinks.
 
 
 ## [1.0.1] - 2023-04-14

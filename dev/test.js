@@ -33,7 +33,7 @@ async function withTempFiles(fn) {
 		fs.symlinkSync(files.badFile, files.goodToBad);
 		fs.symlinkSync(files.badFile, files.badToBad);
 
-		await fn(sandboxDir, {...files});
+		await fn(sandboxDir, files);
 	} finally {
 		fs.rmSync(testDir, {recursive: true, force: true});
 	}

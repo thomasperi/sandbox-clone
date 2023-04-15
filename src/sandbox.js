@@ -43,7 +43,13 @@ function assignMembers(source, target) {
 
 function createProxy(realNamespace, methodPaths, methodName) {
 	return function (...args) {
-		verifyArgs(methodPaths, methodName, args);
+		// fs cp seem to cache the fs methods however it finds them,
+		// so putting the verify behind this condition ensures that
+		// even if the fake method continues to be called, it will act
+		// like the real one unless sandbox directories are defined.
+		if (sandboxDirs) {
+			verifyArgs(methodPaths, methodName, args);
+		}
 		return realNamespace[methodName](...args);
 	};
 }
