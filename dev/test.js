@@ -4,23 +4,24 @@ const fs = require('fs');
 const path = require('path').posix;
 
 const tmp = os.tmpdir();
-const testDir = path.join(tmp, 'test-sandbox-fs');
-const sandboxDir = path.join(testDir, 'the-sandbox');
-const good = path.join(sandboxDir, 'good');
-const bad = path.join(testDir, 'bad');
-const files = {
-	goodFile: `${good}-file`,
-	badFile: `${bad}-file`,
-	goodToGood: `${good}-link-to-good-file`,
-	badToGood: `${bad}-link-to-good-file`,
-	goodToBad: `${good}-link-to-bad-file`,
-	badToBad: `${bad}-link-to-bad-file`,
-};
 
 async function withTempFiles(fn) {
-	if (fs.existsSync(testDir)) {
-		throw `${testDir} already exists, delete manually`;
-	}
+	const prefix = path.join(tmp, 'test-sandbox-');
+	const testDir = fs.mkdtempSync(prefix);
+	const sandboxDir = path.join(testDir, 'the-sandbox');
+	const good = path.join(sandboxDir, 'good');
+	const bad = path.join(testDir, 'bad');
+	const files = {
+		goodFile: `${good}-file`,
+		badFile: `${bad}-file`,
+		goodToGood: `${good}-link-to-good-file`,
+		badToGood: `${bad}-link-to-good-file`,
+		goodToBad: `${good}-link-to-bad-file`,
+		badToBad: `${bad}-link-to-bad-file`,
+	};
+	// if (fs.existsSync(testDir)) {
+	// 	throw `${testDir} already exists, delete manually`;
+	// }
 	try {
 		fs.mkdirSync(sandboxDir, {recursive: true});
 		
@@ -32,7 +33,7 @@ async function withTempFiles(fn) {
 		fs.symlinkSync(files.badFile, files.goodToBad);
 		fs.symlinkSync(files.badFile, files.badToBad);
 
-		await fn(sandboxDir);
+		await fn(sandboxDir, {...files});
 	} finally {
 		fs.rmSync(testDir, {recursive: true, force: true});
 	}
@@ -104,9 +105,8 @@ function makeIt(methodName, methodType, itFn) {
 }
 
 module.exports = {
-	sandboxDir,
-	files,
 	describeMany,
 	they,
 	withTempFiles,
 };
+

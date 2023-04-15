@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- (dev) Tests use a standard set of symlinks.
+- (dev) Tests now use a standard set of symlinks and unique temp directories.
 
 ### Fixed
 

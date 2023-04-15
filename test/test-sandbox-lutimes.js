@@ -1,8 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles, sandboxDir, files } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
-const { goodFile, badFile, goodToGood, badToGood, goodToBad, badToBad } = files; // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 // The utimes methods expect atime and mtime to be in seconds,
 // but the stat methods return it in milliseconds.
@@ -18,60 +17,60 @@ describeMany(
 	['lutimesSync', 'sync'],
 
 	they('should succeed on a good link to a good file', async (__method__) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodToGood, atime, mtime);
+			const result = await __method__(files.goodToGood, atime, mtime);
 			unbox();
 			
 			assert.equal(result, undefined);
 
-			const stat = fs.lstatSync(goodToGood);
+			const stat = fs.lstatSync(files.goodToGood);
 			assert.equal(stat.atimeMs, atimeMs);
 			assert.equal(stat.mtimeMs, mtimeMs);
 		});
 	}),
 
 	they('should succeed on a good link to a bad file', async (__method__) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodToBad, atime, mtime);
+			const result = await __method__(files.goodToBad, atime, mtime);
 			unbox();
 			
 			assert.equal(result, undefined);
 
-			const stat = fs.lstatSync(goodToBad);
+			const stat = fs.lstatSync(files.goodToBad);
 			assert.equal(stat.atimeMs, atimeMs);
 			assert.equal(stat.mtimeMs, mtimeMs);
 		});
 	}),
 
 	they('should fail on a bad link to a good file', async (__method__) => {
-		await withTempFiles(async () => {
-			const oldStat = fs.lstatSync(badToGood);
+		await withTempFiles(async (sandboxDir, files) => {
+			const oldStat = fs.lstatSync(files.badToGood);
 			
 			sandbox(sandboxDir);
-			const result = await __method__(badToGood, atime, mtime);
+			const result = await __method__(files.badToGood, atime, mtime);
 			unbox();
 			
 			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 
-			const stat = fs.lstatSync(badToGood);
+			const stat = fs.lstatSync(files.badToGood);
 			assert.equal(stat.atimeMs, oldStat.atimeMs);
 			assert.equal(stat.mtimeMs, oldStat.mtimeMs);
 		});
 	}),
 
 	they('should fail on a bad link to a bad file', async (__method__) => {
-		await withTempFiles(async () => {
-			const oldStat = fs.lstatSync(badToBad);
+		await withTempFiles(async (sandboxDir, files) => {
+			const oldStat = fs.lstatSync(files.badToBad);
 			
 			sandbox(sandboxDir);
-			const result = await __method__(badToBad, atime, mtime);
+			const result = await __method__(files.badToBad, atime, mtime);
 			unbox();
 			
 			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 
-			const stat = fs.lstatSync(badToBad);
+			const stat = fs.lstatSync(files.badToBad);
 			assert.equal(stat.atimeMs, oldStat.atimeMs);
 			assert.equal(stat.mtimeMs, oldStat.mtimeMs);
 		});

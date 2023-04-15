@@ -1,8 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles, sandboxDir, files } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
-const { goodFile, badFile, goodToGood, badToGood, goodToBad, badToBad } = files; // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const writeFlags = ['a', 'a+', 'as', 'as+', 'r+', 'rs+', 'w', 'w+'];
 const writeFlagsNoExist = ['ax', 'ax+', 'wx', 'wx+'];
@@ -40,9 +39,9 @@ describeMany(
 	['openSync', 'sync'],
 
 	they('should succeed at opening a good file for reading with no flag', async (__method__, type) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodFile);
+			const result = await __method__(files.goodFile);
 			unbox();
 			
 			await assertResultType(result, type);
@@ -50,9 +49,9 @@ describeMany(
 		});
 	}),
 	they('should succeed at opening a good file for reading with `r` flag', async (__method__, type) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodFile, 'r');
+			const result = await __method__(files.goodFile, 'r');
 			unbox();
 			
 			await assertResultType(result, type);
@@ -60,9 +59,9 @@ describeMany(
 		});
 	}),
 	they('should succeed at opening a bad file for reading with no flag', async (__method__, type) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodFile);
+			const result = await __method__(files.goodFile);
 			unbox();
 			
 			await assertResultType(result, type);
@@ -70,9 +69,9 @@ describeMany(
 		});
 	}),
 	they('should succeed at opening a bad file for reading with `r` flag', async (__method__, type) => {
-		await withTempFiles(async () => {
+		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
-			const result = await __method__(goodFile, 'r');
+			const result = await __method__(files.goodFile, 'r');
 			unbox();
 			
 			await assertResultType(result, type);
@@ -81,9 +80,9 @@ describeMany(
 	}),
 	they('should succeed at opening a good file for writing', async (__method__, type) => {
 		for (const flag of writeFlags) {
-			await withTempFiles(async () => {
+			await withTempFiles(async (sandboxDir, files) => {
 				sandbox(sandboxDir);
-				const result = await __method__(goodFile, flag);
+				const result = await __method__(files.goodFile, flag);
 				unbox();
 			
 				await assertResultType(result, type, `problem with ${flag}`);
@@ -91,9 +90,9 @@ describeMany(
 			});
 		}
 		for (const flag of writeFlagsNoExist) {
-			await withTempFiles(async () => {
+			await withTempFiles(async (sandboxDir, files) => {
 				sandbox(sandboxDir);
-				const result = await __method__(`${goodFile}-no-exist`, flag);
+				const result = await __method__(`${files.goodFile}-no-exist`, flag);
 				unbox();
 			
 				await assertResultType(result, type, `problem with ${flag}`);
@@ -103,9 +102,9 @@ describeMany(
 	}),
 	they('should fail at opening a bad file for writing', async (__method__) => {
 		for (const flag of writeFlags) {
-			await withTempFiles(async () => {
+			await withTempFiles(async (sandboxDir, files) => {
 				sandbox(sandboxDir);
-				const result = await __method__(badFile, flag);
+				const result = await __method__(files.badFile, flag);
 
 				await closeResult(result);
 				assert.equal(result.code, 'OUTSIDE_SANDBOX');
@@ -113,9 +112,9 @@ describeMany(
 			});
 		}
 		for (const flag of writeFlagsNoExist) {
-			await withTempFiles(async () => {
+			await withTempFiles(async (sandboxDir, files) => {
 				sandbox(sandboxDir);
-				const result = await __method__(`${badFile}-no-exist`, flag);
+				const result = await __method__(`${files.badFile}-no-exist`, flag);
 
 				await closeResult(result);
 				assert.equal(result.code, 'OUTSIDE_SANDBOX');
