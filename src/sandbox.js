@@ -73,19 +73,19 @@ function verifyArgs(methodPaths, methodName, args) {
 		default: {
 			const indexes = methodPaths[methodName].map(pathIndex => {
 				const index = Math.abs(pathIndex);
-				const expectsLink = index !== pathIndex;
-				return [index - 1, expectsLink];
+				const noDeref = index !== pathIndex;
+				return [index - 1, noDeref];
 			});
-			for (const [index, expectsLink] of indexes) {
-				verifyPath(args[index], expectsLink);
+			for (const [index, noDeref] of indexes) {
+				verifyPath(args[index], noDeref);
 			}
 		}
 	}
 }
 
-function verifyPath(pathToVerify, expectsLink) {
+function verifyPath(pathToVerify, noDeref) {
 	if (typeof pathToVerify === 'string') {
-		if (expectsLink) {
+		if (noDeref) {
 			// If this path is expected to be a link,
 			// only its parent and ancestors need to be real and inside the sandbox.
 			pathToVerify = path.dirname(pathToVerify);

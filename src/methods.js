@@ -6,30 +6,28 @@
 // A negative index indicates that the path's parent should be sandboxed instead,
 // for the case of symlinks that won't be dereferenced
 
-// to-do: determine if any other methods should get negatives.
-
 const promiseMethods = {
 	access: [1],
 	appendFile: [1],
 	chmod: [1],
 	chown: [1],
-	copyFile: [2], // follows existing dest symlink and replaces its realpath with a copy of src file
-	cp: [-2], // replaces existing dest symlink itself with a copy of src file
-	lchmod: [1],
-	lchown: [1],
+	copyFile: [2], // real method dereferences pre-existing `dest` symlink.
+	cp: [-2], // real method doesn't dereference pre-existing `dest` symlink. `{dereference: true}` only dereferences `src`.
+	lchmod: [-1],
+	lchown: [-1],
 	lutimes: [-1],
-	link: [2],
+	link: [-2], // real method fails if `newPath` pre-exists at all, so that should be the error that gets thrown.
 	mkdir: [1],
 	mkdtemp: [1],
 	open: [1],
-	rename: [1, -2], // replaces existing newPath symlink itself with file at oldPath
+	rename: [1, -2], // real method doesn't dereference pre-existing `newPath` symlink.
 	rmdir: [1],
 	rm: [1],
-	symlink: [2],
-	truncate: [1],
-	unlink: [-1],
+	symlink: [-2], // real method fails if `newPath` pre-exists at all, so that should be the error that gets thrown.
+	truncate: [1], // to-do: verify that the real method dereferences.
+	unlink: [-1], // to-do: verify that the real method doesn't dereference.
 	utimes: [1],
-	writeFile: [1],
+	writeFile: [1], // to-do: verify that the real method dereferences.
 };
 const fsMethods = {
 	
@@ -39,20 +37,20 @@ const fsMethods = {
 	appendFile: [1],
 	chmod: [1],
 	chown: [1],
-	copyFile: [2], // see note in promise above
-	cp: [-2], // see note in promise above
+	copyFile: [2],
+	cp: [-2],
 	createWriteStream: [1],
-	lchmod: [1],
-	lchown: [1],
+	lchmod: [-1],
+	lchown: [-1],
 	lutimes: [-1],
-	link: [2],
+	link: [-2],
 	mkdir: [1],
 	mkdtemp: [1],
 	open: [1],
-	rename: [1, -2], // see note in promise above
+	rename: [1, -2],
 	rmdir: [1],
 	rm: [1],
-	symlink: [2],
+	symlink: [-2],
 	truncate: [1],
 	unlink: [-1],
 	utimes: [1],
@@ -64,19 +62,19 @@ const fsMethods = {
 	appendFileSync: [1],
 	chmodSync: [1],
 	chownSync: [1],
-	copyFileSync: [2], // see note in promise above
-	cpSync: [-2], // see note in promise above
-	lchmodSync: [1],
-	lchownSync: [1],
+	copyFileSync: [2],
+	cpSync: [-2],
+	lchmodSync: [-1],
+	lchownSync: [-1],
 	lutimesSync: [-1],
-	linkSync: [2],
+	linkSync: [-2],
 	mkdirSync: [1],
 	mkdtempSync: [1],
 	openSync: [1],
-	renameSync: [1, -2], // see note in promise above
+	renameSync: [1, -2],
 	rmdirSync: [1],
 	rmSync: [1],
-	symlinkSync: [2],
+	symlinkSync: [-2],
 	truncateSync: [1],
 	unlinkSync: [-1],
 	utimesSync: [1],
