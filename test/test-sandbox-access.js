@@ -127,4 +127,49 @@ describeMany(
 			assert.equal(result, undefined);
 		});
 	}),
+
+	they('should succeed at accessing a good link to a good file for write', async (__method__) => {
+		await withTempFiles(async () => {
+			chmod_u_rwx();
+			
+			sandbox(sandboxDir);
+			const result = await __method__(goodToGood, W_OK);
+			unbox();
+			
+			assert.equal(result, undefined);
+		});
+	}),
+	they('should succeed at accessing a bad link to a good file for write', async (__method__) => {
+		await withTempFiles(async () => {
+			chmod_u_rwx();
+			
+			sandbox(sandboxDir);
+			const result = await __method__(badToGood, W_OK);
+			unbox();
+			
+			assert.equal(result, undefined);
+		});
+	}),
+	they('should fail at accessing a good link to a bad file for write', async (__method__) => {
+		await withTempFiles(async () => {
+			chmod_u_rwx();
+			
+			sandbox(sandboxDir);
+			const result = await __method__(goodToBad, W_OK);
+			unbox();
+			
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
+		});
+	}),
+	they('should fail at accessing a bad link to a bad file for write', async (__method__) => {
+		await withTempFiles(async () => {
+			chmod_u_rwx();
+			
+			sandbox(sandboxDir);
+			const result = await __method__(badToBad, W_OK);
+			unbox();
+			
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
+		});
+	}),
 );

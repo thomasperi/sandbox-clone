@@ -47,4 +47,73 @@ describeMany(
 
 		});
 	}),
+
+	they('should succeed at changing mode of good link to good file', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.chmodSync(goodFile, readOnly);
+
+			sandbox(sandboxDir);
+			const result = await __method__(goodToGood, readWrite);
+			unbox();
+
+			assert.equal(result, undefined);
+			try {
+				fs.accessSync(goodFile, writeOK);
+			} catch (e) {
+				assert.fail('goodFile should be writable after read-write chmod succeeded');
+			}
+
+		});
+	}),
+	they('should succeed at changing mode of bad link to good file', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.chmodSync(goodFile, readOnly);
+
+			sandbox(sandboxDir);
+			const result = await __method__(badToGood, readWrite);
+			unbox();
+
+			assert.equal(result, undefined);
+			try {
+				fs.accessSync(goodFile, writeOK);
+			} catch (e) {
+				assert.fail('goodFile should be writable after read-write chmod succeeded');
+			}
+
+		});
+	}),
+	they('should fail at changing mode of good link to bad file', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.chmodSync(badFile, readWrite);
+
+			sandbox(sandboxDir);
+			const result = await __method__(goodToBad, readOnly);
+			unbox();
+
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			try {
+				fs.accessSync(badFile, writeOK);
+			} catch (e) {
+				assert.fail('badFile should remain writable after read-only chmod failed');
+			}
+
+		});
+	}),
+	they('should fail at changing mode of bad link to bad file', async (__method__) => {
+		await withTempFiles(async () => {
+			fs.chmodSync(badFile, readWrite);
+
+			sandbox(sandboxDir);
+			const result = await __method__(badToBad, readOnly);
+			unbox();
+
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			try {
+				fs.accessSync(badFile, writeOK);
+			} catch (e) {
+				assert.fail('badFile should remain writable after read-only chmod failed');
+			}
+
+		});
+	}),
 );

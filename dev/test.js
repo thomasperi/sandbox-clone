@@ -100,7 +100,7 @@ function makeIt(methodName, methodType, itFn) {
 			}
 		}
 	};
-	return () => itFn(__method__, methodType);
+	return () => itFn(__method__, methodType, methodName);
 }
 
 module.exports = {
