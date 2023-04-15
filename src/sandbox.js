@@ -99,9 +99,8 @@ function verifyPath(pathToVerify, sandboxDirs, expectsLink) {
 
 function realExistingPartOfPath(pathName) {
 	try {
-		return fs.realpathSync.native(pathName);
+		return fs.realpathSync(pathName);
 	} catch (e) {
-		// Unlike the native and promises versions of realpath,
 		// realpathSync's error provides the first real part of the path that didn't exist,
 		// so back out one directory and we've got the part that does exist.
 		return fs.realpathSync(path.dirname(e.path));
