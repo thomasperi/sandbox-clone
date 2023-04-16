@@ -91,9 +91,9 @@ console.log(isBoxed()); // -> false
 
 - The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. They *are* aware of the string values (`'a'`, `'a+'`, `'as'`, etc.) however, and reject the ones that allow writing.
 
-- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
+- The real `chown` and `lchown` methods require elevated privileges, so the sandboxed versions are untested.
 
-- The real `chown` methods require elevated privileges, so the sandboxed versions are untested.
+- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
 
 
 ## `new Clone()`
