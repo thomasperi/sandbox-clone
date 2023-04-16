@@ -75,20 +75,6 @@ unbox();
 console.log(isBoxed()); // -> false
 ```
 
-### Notes about the sandboxed `fs` methods:
-
-- Methods that expect file descriptors instead of paths can't be sandboxed.
-
-- Methods that only read from the filesystem but don't write aren't sandboxed.
-
-  - Exception: The `access` methods don't write to the filesystem, but are sandboxed anyway, because the way they work is by either issuing an error or not. Therefore the sandboxed versions are aware of the `mode` argument and only reject on `fs.constants.W_OK`.
-
-- The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. They *are* aware of the string values (`'a'`, `'a+'`, `'as'`, etc.) however, and reject the ones that allow writing.
-
-- The real `chown` and `lchown` methods require elevated privileges, so the sandboxed versions are untested.
-
-- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
-
 
 ## `new Clone()`
 
@@ -246,3 +232,18 @@ Now `diffs` holds an object with four properties -- `created`, `modified`, `remo
 ```
 
 It doesn't know about renaming. The old name will be in `deleted` and the new name will be in `created`.
+
+
+## Notes about the sandboxed `fs` methods:
+
+- Methods that expect file descriptors instead of paths can't be sandboxed.
+
+- Methods that only read from the filesystem but don't write aren't sandboxed.
+
+  - Exception: The `access` methods don't write to the filesystem, but are sandboxed anyway, because the way they work is by either issuing an error or not. Therefore the sandboxed versions are aware of the `mode` argument and only reject on `fs.constants.W_OK`.
+
+- The sandboxed `open` methods are unaware of the integer values for the `flags` parameter. They *are* aware of the string values (`'a'`, `'a+'`, `'as'`, etc.) however, and reject the ones that allow writing.
+
+- The real `chown` and `lchown` methods require elevated privileges, so the sandboxed versions are untested.
+
+- The real `lchmod` methods are only implemented on MacOS, so the sandboxed versions are untested.
