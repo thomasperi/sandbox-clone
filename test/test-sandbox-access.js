@@ -178,12 +178,37 @@ describeMany(
 			
 			const realCwd = process.cwd();
 			process.chdir(sandboxDir);
-			sandbox();
-			const result = await __method__(files.badFile, W_OK);
+
+			sandbox('foo/..');
+			const resultGood = await __method__(files.goodFile, W_OK);
+			const resultBad = await __method__(files.badFile, W_OK);
 			unbox();
+
 			process.chdir(realCwd);
+
+			assert.equal(resultGood, undefined);
+			assert.equal(resultBad && resultBad.code, 'OUTSIDE_SANDBOX');
 			
-			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
+		});
+	}),
+
+	they('should use cwd when no sandbox path is specified', async (__method__) => {
+		await withTempFiles(async (sandboxDir, files) => {
+			chmod_u_rwx(files);
+			
+			const realCwd = process.cwd();
+			process.chdir(sandboxDir);
+
+			sandbox();
+			const resultGood = await __method__(files.goodFile, W_OK);
+			const resultBad = await __method__(files.badFile, W_OK);
+			unbox();
+
+			process.chdir(realCwd);
+
+			assert.equal(resultGood, undefined);
+			assert.equal(resultBad && resultBad.code, 'OUTSIDE_SANDBOX');
+			
 		});
 	}),
 );
