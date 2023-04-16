@@ -20,9 +20,9 @@ function sandbox(...dirs) {
 		throw `already sandboxed to ${sandboxDirs.join(', ')}`;
 	}
 	if (dirs.length === 0) {
-		dirs.push(null);
+		throw 'at least one sandbox directory must be specified'
 	}
-	sandboxDirs = dirs.map(dir => path.resolve(dir || ''));
+	sandboxDirs = dirs.map(dir => path.resolve(dir));
 	assignMembers(fakeMembers, fs);
 }
 

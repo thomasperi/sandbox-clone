@@ -4,6 +4,11 @@ const path = require('path');
 const { sandbox, unbox } = require('./sandbox.js');
 
 function Clone({source, encodings} = {}) {
+	if (typeof source === 'string') {
+		source = path.resolve(source);
+	} else if (source !== undefined) {
+		throw 'source option must be a string or undefined';
+	}
 	const prefix = path.join(os.tmpdir(), 'clone-');
 	const dtemp = fs.mkdtempSync(prefix);
 	const cloneName = source ? path.basename(source) : 'base';

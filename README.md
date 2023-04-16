@@ -63,12 +63,6 @@ process.chdir('/foo');
 sandbox('bar');
 ```
 
-If no arguments, the working directory is used:
-```javascript
-process.chdir('/foo/bar');
-sandbox();
-```
-
 ### `isBoxed()`
 
 Reports whether sandboxing is in effect.

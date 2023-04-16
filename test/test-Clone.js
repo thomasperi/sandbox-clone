@@ -210,6 +210,49 @@ describe('Clone tests', async () => {
 		}
 	});
 
+	it('should allow relative source path', async () => {
+		process.chdir(source);
+		const clone = new Clone({source: 'foo/..'});
+		try {
+			const result = clone.snapshot();
+			assert.deepEqual(result, {
+				'bar/sbor/thed': 'thed',
+				'bar/zote.fakeimage': 'zote',
+				'foo.txt': 'foo'
+			});
+			
+		} finally {
+			clone.destroy();
+		}
+	});
+
+	it('should allow empty string source path as relative', async () => {
+		process.chdir(source);
+		const clone = new Clone({source: ''});
+		try {
+			const result = clone.snapshot();
+			assert.deepEqual(result, {
+				'bar/sbor/thed': 'thed',
+				'bar/zote.fakeimage': 'zote',
+				'foo.txt': 'foo'
+			});
+			
+		} finally {
+			clone.destroy();
+		}
+	});
+
+	it('should create empty directory when source path is specified as undefined', async () => {
+		const clone = new Clone({source: undefined});
+		try {
+			const result = clone.snapshot();
+			assert.deepEqual(result, {});
+			
+		} finally {
+			clone.destroy();
+		}
+	});
+
 	it('should allow base() after destroy()', async () => {
 		const clone = new Clone();
 		const base = clone.base();
