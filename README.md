@@ -31,16 +31,16 @@ const { sandbox, unbox, isBoxed, Clone } = require('sandbox-clone');
 
 ## `sandbox()` and `unbox()`
 
-Prevent writing outside the specified directory or directories with `sandbox()`. Restore the un-sandboxed real `fs` methods with `unbox()`.
+Prevent writing outside the specified directory (or directories) with `sandbox()`. Restore the un-sandboxed real `fs` methods with `unbox()`.
 
 ```javascript
 const { W_OK } = fs.constants;
 
-sandbox('/foo/bar', '/foo/sbor');
+sandbox('/foo/bar');
 
 // try/catch blocks omitted for brevity and clarity
 fs.accessSync('/foo/bar/zote.txt', W_OK); // succeeds
-fs.accessSync('/foo/sbor/thed.txt', W_OK); // succeeds
+fs.accessSync('/foo/bar/thed.txt', W_OK); // succeeds
 fs.accessSync('/foo/sneg/baz.txt', W_OK); // fails
 fs.accessSync('/boo/far.txt', W_OK); // fails
 
@@ -48,6 +48,25 @@ unbox();
 
 fs.accessSync('/foo/sneg/baz.txt', W_OK); // succeeds now
 fs.accessSync('/boo/far.txt', W_OK); // succeeds now
+```
+
+### Variations
+
+Multiple sandbox directories:
+```javascript
+sandbox('/foo/bar', '/foo/sbor');
+```
+
+Relative paths:
+```javascript
+process.chdir('/foo');
+sandbox('bar');
+```
+
+If no arguments, the working directory is used:
+```javascript
+process.chdir('/foo/bar');
+sandbox();
 ```
 
 ### `isBoxed()`

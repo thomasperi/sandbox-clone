@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (dev) Tests now use a standard set of symlinks and unique temp directories.
 - (dev) Tests for more methods.
+- Relative and unspecified sandbox paths now resolve to working directory.
 
 ### Fixed
 
