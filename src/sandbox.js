@@ -19,7 +19,7 @@ function sandbox(...dirs) {
 	if (sandboxDirs) {
 		throw `already sandboxed to ${sandboxDirs.join(', ')}`;
 	}
-	sandboxDirs = dirs;
+	sandboxDirs = dirs.map(dir => path.resolve(dir || ''));
 	assignMembers(fakeMembers, fs);
 }
 

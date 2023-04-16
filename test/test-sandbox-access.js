@@ -101,7 +101,7 @@ describeMany(
 			const result = await __method__(files.badFile, W_OK);
 			unbox();
 			
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 		});
 	}),
 	they('should succeed at accessing good file for execute', async (__method__) => {
@@ -167,6 +167,21 @@ describeMany(
 			sandbox(sandboxDir);
 			const result = await __method__(files.badToBad, W_OK);
 			unbox();
+			
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
+		});
+	}),
+
+	they('should work with relative sandbox path', async (__method__) => {
+		await withTempFiles(async (sandboxDir, files) => {
+			chmod_u_rwx(files);
+			
+			const realCwd = process.cwd();
+			process.chdir(sandboxDir);
+			sandbox();
+			const result = await __method__(files.badFile, W_OK);
+			unbox();
+			process.chdir(realCwd);
 			
 			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 		});
