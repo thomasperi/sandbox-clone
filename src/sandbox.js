@@ -85,6 +85,16 @@ function verifyArgs(methodPaths, methodName, args) {
 
 function verifyPath(pathToVerify, noDeref) {
 	if (typeof pathToVerify === 'string') {
+
+		if (fs.existsSync(pathToVerify) && sandboxDirs.includes(fs.realpathSync(pathToVerify))) {
+			throw {
+				code: 'IS_SANDBOX',
+				path: pathToVerify,
+				sandboxes: sandboxDirs,
+				msg: `${pathToVerify} is one of the sandbox directories itself (${sandboxDirs.join(', ')})`,
+			};
+		}
+		
 		if (noDeref) {
 			// If this path is expected to be a link,
 			// only its parent and ancestors need to be real and inside the sandbox.
@@ -99,6 +109,7 @@ function verifyPath(pathToVerify, noDeref) {
 				msg: `${pathToVerify} is outside the sandbox directories (${sandboxDirs.join(', ')})`,
 			};
 		}
+		
 	}
 }
 
