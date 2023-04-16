@@ -10,18 +10,23 @@ because the real method dereferences paths that end at symlinks.
 A negative index indicates that the path's PARENT should be `realpath`ed instead of the
 full path.
 
-In most cases this is because the real method doesn't dereference symlinks.
+In most cases this is because the real method doesn't dereference symlinks, with a couple
+of exceptions:
 
-In some cases it's because the method would fail, either (a) if the path is a symlink
-or (b) if the path exists at all. In those cases, we're avoiding dereferencing the path
-so that the real error can be thrown from the real method.
+- In some cases it's because the real method would fail, either if the path is a symlink
+or if the path exists at all. In those cases, the fake method doesn't dereference the
+path, so that the real error can be thrown from the real method.
 
-The real `copyFile` and `cp` methods have different dereferencing behaviors:
+- The real `mkdtemp` takes a `prefix` and not a whole path, so the fake method shouldn't
+dereference it even if it exists as a link, because the prefix doesn't refer to that
+existing path.
 
-`copyFile` dereferences `dest` if it's a symlink, overwriting the target of the link
+Also worth noting is the difference in dereferencing behavior between `copyFile` and `cp`:
+
+- `copyFile` dereferences `dest` if it's a symlink, overwriting the target of the link
 with a copy of `src`.
 
-`cp` doesn't dereference `dest` if it's a symlink, instead replacing the symlink itself
+- `cp` doesn't dereference `dest` if it's a symlink, instead replacing the symlink itself
 with a copy of `src`. `{dereference: true}` only dereferences `src` and not `dest`.
 
 */
@@ -38,14 +43,14 @@ const promiseMethods = {
 	lutimes: [-1],
 	link: [-2], // real method fails if `newPath` exists.
 	mkdir: [1],
-	mkdtemp: [1], // to-do: test
+	mkdtemp: [-1],
 	open: [1],
 	rename: [1, -2],
 	rmdir: [-1], // real method fails if `path` is not a directory.
 	rm: [-1],
 	symlink: [-2], // real method fails if `newPath` exists.
-	truncate: [1], // to-do: test
-	unlink: [-1], // to-do: test
+	truncate: [1],
+	unlink: [-1],
 	utimes: [1],
 	writeFile: [1],
 };
@@ -65,7 +70,7 @@ const fsMethods = {
 	lutimes: [-1],
 	link: [-2],
 	mkdir: [1],
-	mkdtemp: [1],
+	mkdtemp: [-1],
 	open: [1],
 	rename: [1, -2],
 	rmdir: [-1],
@@ -89,7 +94,7 @@ const fsMethods = {
 	lutimesSync: [-1],
 	linkSync: [-2],
 	mkdirSync: [1],
-	mkdtempSync: [1],
+	mkdtempSync: [-1],
 	openSync: [1],
 	renameSync: [1, -2],
 	rmdirSync: [-1],
