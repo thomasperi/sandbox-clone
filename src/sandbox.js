@@ -86,6 +86,10 @@ function verifyArgs(methodPaths, methodName, args) {
 function verifyPath(pathToVerify, noDeref) {
 	if (typeof pathToVerify === 'string') {
 
+		// Consider the sandbox directories themselves off-limits to changes,
+		// mainly because it's the easiest way to keep using the parent directory
+		// of a path to keep the endpoint of the path from being dereferenced. (That
+		// approach would not work on the sandbox directory because the parent is outside.)
 		if (fs.existsSync(pathToVerify) && sandboxDirs.includes(fs.realpathSync(pathToVerify))) {
 			throw {
 				code: 'IS_SANDBOX',
@@ -96,7 +100,7 @@ function verifyPath(pathToVerify, noDeref) {
 		}
 		
 		if (noDeref) {
-			// If this path is expected to be a link,
+			// If this path is not going to be dereferenced by the real method,
 			// only its parent and ancestors need to be real and inside the sandbox.
 			pathToVerify = path.dirname(pathToVerify);
 		}
