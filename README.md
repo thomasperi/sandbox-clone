@@ -83,8 +83,6 @@ console.log(isBoxed()); // -> false
 
 ### Notes about the sandboxed `fs` methods:
 
-- Several sandboxed methods are not yet tested.
-
 - Methods that expect file descriptors instead of paths can't be sandboxed.
 
 - Methods that only read from the filesystem but don't write aren't sandboxed.
