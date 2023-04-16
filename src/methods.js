@@ -1,33 +1,53 @@
-// Map the sandboxable fs and fs.promises methods
-// to which arguments are paths to be verified.
+/*
 
-// Indices start at 1.
+Index which arguments of which methods should be sandboxed.
 
-// A negative index indicates that the path's parent should be sandboxed instead,
-// for the case of symlinks that won't be dereferenced
+Indices start at 1 so that they can be signed.
+
+A positive index indicates that the path should be `realpath`ed before verification,
+because the real method dereferences paths that end at symlinks.
+
+A negative index indicates that the path's PARENT should be `realpath`ed instead of the
+full path.
+
+In most cases this is because the real method doesn't dereference symlinks.
+
+In some cases it's because the method would fail, either (a) if the path is a symlink
+or (b) if the path exists at all. In those cases, we're avoiding dereferencing the path
+so that the real error can be thrown from the real method.
+
+The real `copyFile` and `cp` methods have different dereferencing behaviors:
+
+`copyFile` dereferences `dest` if it's a symlink, overwriting the target of the link
+with a copy of `src`.
+
+`cp` doesn't dereference `dest` if it's a symlink, instead replacing the symlink itself
+with a copy of `src`. `{dereference: true}` only dereferences `src` and not `dest`.
+
+*/
 
 const promiseMethods = {
 	access: [1],
 	appendFile: [1],
 	chmod: [1],
 	chown: [1],
-	copyFile: [2], // real method dereferences pre-existing `dest` symlink.
-	cp: [-2], // real method doesn't dereference pre-existing `dest` symlink. `{dereference: true}` only dereferences `src`.
+	copyFile: [2],
+	cp: [-2],
 	lchmod: [-1],
 	lchown: [-1],
 	lutimes: [-1],
-	link: [-2], // real method fails if `newPath` pre-exists at all, so that should be the error that gets thrown.
+	link: [-2], // real method fails if `newPath` exists.
 	mkdir: [1],
-	mkdtemp: [1],
+	mkdtemp: [1], // to-do: test
 	open: [1],
-	rename: [1, -2], // real method doesn't dereference pre-existing `newPath` symlink.
-	rmdir: [1],
-	rm: [1],
-	symlink: [-2], // real method fails if `newPath` pre-exists at all, so that should be the error that gets thrown.
-	truncate: [1], // to-do: verify that the real method dereferences.
-	unlink: [-1], // to-do: verify that the real method doesn't dereference.
+	rename: [1, -2],
+	rmdir: [-1], // real method fails if `path` is not a directory.
+	rm: [-1],
+	symlink: [-2], // real method fails if `newPath` exists.
+	truncate: [1], // to-do: test
+	unlink: [-1], // to-do: test
 	utimes: [1],
-	writeFile: [1], // to-do: verify that the real method dereferences.
+	writeFile: [1],
 };
 const fsMethods = {
 	
@@ -48,8 +68,8 @@ const fsMethods = {
 	mkdtemp: [1],
 	open: [1],
 	rename: [1, -2],
-	rmdir: [1],
-	rm: [1],
+	rmdir: [-1],
+	rm: [-1],
 	symlink: [-2],
 	truncate: [1],
 	unlink: [-1],
@@ -72,8 +92,8 @@ const fsMethods = {
 	mkdtempSync: [1],
 	openSync: [1],
 	renameSync: [1, -2],
-	rmdirSync: [1],
-	rmSync: [1],
+	rmdirSync: [-1],
+	rmSync: [-1],
 	symlinkSync: [-2],
 	truncateSync: [1],
 	unlinkSync: [-1],
@@ -86,6 +106,8 @@ module.exports = {promiseMethods, fsMethods};
 /*
 
 NOT SANDBOXED:
+
+Methods that read only (ro) and methods that use file descriptors (fd) instead of paths.
 
 fs.promises.lstat (ro)
 fs.promises.opendir (ro)
