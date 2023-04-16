@@ -13,6 +13,12 @@ describeMany(
 	['mkdir', 'promise'],
 	['mkdir', 'callback'],
 	['mkdirSync', 'sync'],
+	
+	// to-do:
+	// Test the scenario of attempting mkdir on a symlink
+	// that points to a non-existant directory outside the sandbox.
+	// Should fail because mkdir dereferences the path.
+	
 	they('should succeed at creating a good directory', async (__method__) => {
 		await withTempFiles(async (sandboxDir, files) => {
 			subdirs(files);

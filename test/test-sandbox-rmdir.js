@@ -15,6 +15,9 @@ describeMany(
 	['rmdir', 'promise'],
 	['rmdir', 'callback'],
 	['rmdirSync', 'sync'],
+	
+	// to-do: test with symlink
+	
 	they('should succeed at removing a good directory', async (__method__) => {
 		await withTempFiles(async (sandboxDir, files) => {
 			subdirs(files);
@@ -33,6 +36,28 @@ describeMany(
 			unbox();
 			assert.equal(result.code, 'OUTSIDE_SANDBOX');
 			assert(fs.existsSync(files.badSubdir));
+		});
+	}),
+
+	they('should fail at removing the sandbox directory itself', async (__method__) => {
+		await withTempFiles(async (sandboxDir, files) => {
+			subdirs(files);
+			sandbox(sandboxDir);
+			const result = await __method__(sandboxDir);
+			unbox();
+			assert.equal(result.code, 'IS_SANDBOX');
+			assert(fs.existsSync(sandboxDir));
+		});
+	}),
+	they('should fail at removing a the sandbox parent directory', async (__method__) => {
+		await withTempFiles(async (sandboxDir, files) => {
+			subdirs(files);
+			sandbox(sandboxDir);
+			const parent = path.dirname(sandboxDir);
+			const result = await __method__(parent);
+			unbox();
+			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert(fs.existsSync(parent));
 		});
 	}),
 );

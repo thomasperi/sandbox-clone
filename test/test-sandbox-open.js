@@ -37,6 +37,8 @@ describeMany(
 	['open', 'promise'],
 	['open', 'callback'],
 	['openSync', 'sync'],
+	
+	// to-do: test with symlinks
 
 	they('should succeed at opening a good file for reading with no flag', async (__method__, type) => {
 		await withTempFiles(async (sandboxDir, files) => {
