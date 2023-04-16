@@ -109,7 +109,7 @@ describeMany(
 				const result = await __method__(files.badFile, flag);
 
 				await closeResult(result);
-				assert.equal(result.code, 'OUTSIDE_SANDBOX');
+				assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 				unbox();
 			});
 		}
@@ -119,7 +119,7 @@ describeMany(
 				const result = await __method__(`${files.badFile}-no-exist`, flag);
 
 				await closeResult(result);
-				assert.equal(result.code, 'OUTSIDE_SANDBOX');
+				assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 				unbox();
 			});
 		}

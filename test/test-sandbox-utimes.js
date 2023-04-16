@@ -38,7 +38,7 @@ describeMany(
 			const result = await __method__(files.badFile, atime, mtime);
 			unbox();
 			
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 
 			const stat = fs.statSync(files.badFile);
 			assert.equal(stat.atimeMs, oldStat.atimeMs);
@@ -68,7 +68,7 @@ describeMany(
 			const result = await __method__(files.goodToBad, atime, mtime);
 			unbox();
 			
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 
 			const stat = fs.statSync(files.badFile);
 			assert.equal(stat.atimeMs, oldStat.atimeMs);
@@ -98,7 +98,7 @@ describeMany(
 			const result = await __method__(files.badToBad, atime, mtime);
 			unbox();
 			
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 
 			const stat = fs.statSync(files.badFile);
 			assert.equal(stat.atimeMs, oldStat.atimeMs);

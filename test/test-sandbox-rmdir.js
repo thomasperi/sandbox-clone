@@ -34,7 +34,7 @@ describeMany(
 			sandbox(sandboxDir);
 			const result = await __method__(files.badSubdir);
 			unbox();
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			assert(fs.existsSync(files.badSubdir));
 		});
 	}),
@@ -45,7 +45,7 @@ describeMany(
 			sandbox(sandboxDir);
 			const result = await __method__(sandboxDir);
 			unbox();
-			assert.equal(result.code, 'IS_SANDBOX');
+			assert.equal(result && result.code, 'IS_SANDBOX');
 			assert(fs.existsSync(sandboxDir));
 		});
 	}),
@@ -56,7 +56,7 @@ describeMany(
 			const parent = path.dirname(sandboxDir);
 			const result = await __method__(parent);
 			unbox();
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			assert(fs.existsSync(parent));
 		});
 	}),

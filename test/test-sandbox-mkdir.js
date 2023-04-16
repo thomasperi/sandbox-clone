@@ -36,7 +36,7 @@ describeMany(
 			sandbox(sandboxDir);
 			const result = await __method__(files.badSubdir);
 			unbox();
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			assert(!fs.existsSync(files.badSubdir));
 		});
 	}),

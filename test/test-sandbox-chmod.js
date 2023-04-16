@@ -37,7 +37,7 @@ describeMany(
 			const result = await __method__(files.badFile, readOnly);
 			unbox();
 
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			try {
 				fs.accessSync(files.badFile, writeOK);
 			} catch (e) {
@@ -89,7 +89,7 @@ describeMany(
 			const result = await __method__(files.goodToBad, readOnly);
 			unbox();
 
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			try {
 				fs.accessSync(files.badFile, writeOK);
 			} catch (e) {
@@ -106,7 +106,7 @@ describeMany(
 			const result = await __method__(files.badToBad, readOnly);
 			unbox();
 
-			assert.equal(result.code, 'OUTSIDE_SANDBOX');
+			assert.equal(result && result.code, 'OUTSIDE_SANDBOX');
 			try {
 				fs.accessSync(files.badFile, writeOK);
 			} catch (e) {
