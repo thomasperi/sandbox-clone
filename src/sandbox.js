@@ -20,7 +20,7 @@ function sandbox(...dirs) {
 		throw `already sandboxed to ${sandboxDirs.join(', ')}`;
 	}
 	if (dirs.length === 0) {
-		throw 'at least one sandbox directory must be specified'
+		throw 'at least one sandbox directory must be specified';
 	}
 	sandboxDirs = dirs.map(dir => path.resolve(dir));
 	assignMembers(fakeMembers, fs);
@@ -88,6 +88,8 @@ function verifyArgs(methodPaths, methodName, args) {
 
 function verifyPath(pathToVerify, noDeref) {
 	if (typeof pathToVerify === 'string') {
+	
+		pathToVerify = path.resolve(pathToVerify);
 
 		// Consider the sandbox directories themselves off-limits to changes,
 		// mainly because it's the easiest way to keep using the parent directory

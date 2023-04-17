@@ -10,6 +10,10 @@ function chmod_u_rwx(files) {
 	fs.chmodSync(files.badFile, 0o700);
 }
 
+function code(obj) {
+	return obj && obj.code;
+}
+
 describeMany(
 	['access', 'promise'],
 	['access', 'callback'],
@@ -188,6 +192,99 @@ describeMany(
 
 			assert.equal(resultGood, undefined);
 			assert.equal(resultBad && resultBad.code, 'OUTSIDE_SANDBOX');
+			
+		});
+	}),
+
+	they('should work with relative argument paths', async (__method__) => {
+		await withTempFiles(async (sandboxDir, files) => {
+			chmod_u_rwx(files);
+			
+			const path = require('path');
+			const badSubdir = path.join(path.dirname(files.badFile), 'bad-subdir');
+			const goodSubdir = path.join(path.dirname(files.goodFile), 'good-subdir');
+
+			const tempDir = path.dirname(sandboxDir);
+			
+			const goodFromSandbox = path.relative(sandboxDir, goodSubdir);
+			const goodFromTemp = path.relative(tempDir, goodSubdir);
+			const goodFromBad = path.relative(badSubdir, goodSubdir);
+
+			const badFromSandbox = path.relative(sandboxDir, badSubdir);
+			const badFromTemp = path.relative(tempDir, badSubdir);
+			const badFromGood = path.relative(goodSubdir, badSubdir);
+			
+			const tempFromSandbox = path.relative(sandboxDir, tempDir);
+			const tempFromGood = path.relative(goodSubdir, tempDir);
+			const tempFromBad = path.relative(badSubdir, tempDir);
+
+			const sandboxFromGood = path.relative(goodSubdir, sandboxDir);
+			const sandboxFromBad = path.relative(badSubdir, sandboxDir);
+			const sandboxFromTemp = path.relative(tempDir, sandboxDir);
+			
+			fs.mkdirSync(badSubdir);
+			fs.mkdirSync(goodSubdir);
+			
+			const realCwd = process.cwd();
+			
+			sandbox(sandboxDir);
+			
+			process.chdir(goodSubdir);
+			const emptyFromGoodResult = await __method__('', W_OK);
+			const dotFromGoodResult = await __method__('.', W_OK);
+			const badFromGoodResult = await __method__(badFromGood, W_OK);
+			const tempFromGoodResult = await __method__(tempFromGood, W_OK);
+			const sandboxFromGoodResult = await __method__(sandboxFromGood, W_OK);
+
+			process.chdir(badSubdir);
+			const goodFromBadResult = await __method__(goodFromBad, W_OK);
+			const emptyFromBadResult = await __method__('', W_OK); 
+			const dotFromBadResult = await __method__('.', W_OK);
+			const tempFromBadResult = await __method__(tempFromBad, W_OK);
+			const sandboxFromBadResult = await __method__(sandboxFromBad, W_OK);
+
+			process.chdir(tempDir);
+			const goodFromTempResult = await __method__(goodFromTemp, W_OK);
+			const badFromTempResult = await __method__(badFromTemp, W_OK);
+			const emptyFromTempResult = await __method__('', W_OK);
+			const dotFromTempResult = await __method__('.', W_OK);
+			const sandboxFromTempResult = await __method__(sandboxFromTemp, W_OK);
+
+			process.chdir(sandboxDir);
+			const goodFromSandboxResult = await __method__(goodFromSandbox, W_OK);
+			const badFromSandboxResult = await __method__(badFromSandbox, W_OK);
+			const tempFromSandboxResult = await __method__(tempFromSandbox, W_OK);
+			const emptyFromSandboxResult = await __method__('', W_OK);
+			const dotFromSandboxResult = await __method__('.', W_OK);
+			
+			unbox();
+
+			process.chdir(realCwd);
+			
+			assert.equal(goodFromBadResult, undefined);
+			assert.equal(goodFromTempResult, undefined);
+			assert.equal(goodFromSandboxResult, undefined);
+			assert.equal(dotFromGoodResult, undefined);
+			assert.equal(code(emptyFromGoodResult), 'ENOENT');
+				// `access` doesn't know what to do with an empty string, but the sandbox accepts it
+
+			assert.equal(code(badFromGoodResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(badFromTempResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(badFromSandboxResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(dotFromBadResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(emptyFromBadResult), 'OUTSIDE_SANDBOX');
+
+			assert.equal(code(tempFromGoodResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(tempFromBadResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(tempFromSandboxResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(dotFromTempResult), 'OUTSIDE_SANDBOX');
+			assert.equal(code(emptyFromTempResult), 'OUTSIDE_SANDBOX');
+
+			assert.equal(code(sandboxFromGoodResult), 'IS_SANDBOX');
+			assert.equal(code(sandboxFromBadResult), 'IS_SANDBOX');
+			assert.equal(code(sandboxFromTempResult), 'IS_SANDBOX');
+			assert.equal(code(dotFromSandboxResult), 'IS_SANDBOX');
+			assert.equal(code(emptyFromSandboxResult), 'IS_SANDBOX');
 			
 		});
 	}),
