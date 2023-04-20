@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const readOnly = 0o400;
 const readWrite = 0o600;
@@ -48,6 +48,7 @@ describeMany(
 	}),
 
 	they('should succeed at changing mode of good link to good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			fs.chmodSync(files.goodFile, readOnly);
 
@@ -65,6 +66,7 @@ describeMany(
 		});
 	}),
 	they('should succeed at changing mode of bad link to good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			fs.chmodSync(files.goodFile, readOnly);
 
@@ -82,6 +84,7 @@ describeMany(
 		});
 	}),
 	they('should fail at changing mode of good link to bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			fs.chmodSync(files.badFile, readWrite);
 
@@ -99,6 +102,7 @@ describeMany(
 		});
 	}),
 	they('should fail at changing mode of bad link to bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			fs.chmodSync(files.badFile, readWrite);
 

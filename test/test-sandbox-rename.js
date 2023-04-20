@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 function newNames(files) {
 	files.goodNew = files.goodFile + '-renamed';
@@ -82,6 +82,7 @@ describeMany(
 	}),
 
 	they('should succeed at overwriting an existing good-to-bad symlink', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			newNames(files);
 			const oldPath = files.goodFile;

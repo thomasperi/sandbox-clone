@@ -1,4 +1,4 @@
-const { posix: path } = require('path');
+const path = require('path');
 const { spawn } = require('child_process');
 const chokidar = require('chokidar');
 const lint = require('./lint.js');

@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const writeFlags = ['a', 'a+', 'as', 'as+', 'r+', 'rs+', 'w', 'w+'];
 const writeFlagsNoExist = ['ax', 'ax+', 'wx', 'wx+'];

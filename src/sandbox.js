@@ -1,6 +1,9 @@
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const { promiseMethods, fsMethods } = require('./methods.js');
+
+const isWindows = os.platform() === 'win32';
 
 let sandboxDirs = null;
 
@@ -22,7 +25,7 @@ function sandbox(...dirs) {
 	if (dirs.length === 0) {
 		throw 'at least one sandbox directory must be specified';
 	}
-	sandboxDirs = dirs.map(dir => path.resolve(dir));
+	sandboxDirs = dirs.map(dir => resolveELP(dir));
 	assignMembers(fakeMembers, fs);
 }
 
@@ -89,7 +92,7 @@ function verifyArgs(methodPaths, methodName, args) {
 function verifyPath(pathToVerify, noDeref) {
 	if (typeof pathToVerify === 'string') {
 	
-		pathToVerify = path.resolve(pathToVerify);
+		pathToVerify = resolveELP(pathToVerify);
 
 		// Consider the sandbox directories themselves off-limits to changes,
 		// mainly because it's the easiest way to keep using the parent directory
@@ -148,6 +151,16 @@ function isInside(child, parent, inclusive = false) {
 		}
 		relative = path.dirname(relative);
 	}
+}
+
+// Use extended-length paths on Windows.
+const prefixELP = '\\\\?\\';
+function resolveELP(p) {
+	p = path.resolve(p);
+	if (isWindows && !p.startsWith(prefixELP)) {
+		p = prefixELP + p;
+	}
+	return p;
 }
 
 module.exports = { sandbox, unbox, isBoxed };

@@ -12,7 +12,7 @@ function Clone({source, encodings} = {}) {
 	const prefix = path.join(os.tmpdir(), 'clone-');
 	const dtemp = fs.mkdtempSync(prefix);
 	const cloneName = source ? path.basename(source) : 'base';
-	const base = path.join(dtemp, cloneName);
+	const base = path.resolve(path.join(dtemp, cloneName));
 
 	let destroyed = false;
 	

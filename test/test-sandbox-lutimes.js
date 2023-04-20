@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 // The utimes methods expect mtime to be in seconds,
 // but the stat methods return it in milliseconds.
@@ -9,13 +9,13 @@ const { describeMany, they, withTempFiles } = require('../dev/test.js'); // esli
 const mtimeMs = 1000;
 const mtime = mtimeMs / 1000;
 
-
 describeMany(
 	['lutimes', 'promise'],
 	['lutimes', 'callback'],
 	['lutimesSync', 'sync'],
 
 	they('should succeed on a good link to a good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.goodToGood, mtime, mtime);
@@ -29,6 +29,7 @@ describeMany(
 	}),
 
 	they('should succeed on a good link to a bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.goodToBad, mtime, mtime);
@@ -42,6 +43,7 @@ describeMany(
 	}),
 
 	they('should fail on a bad link to a good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			const oldStat = fs.lstatSync(files.badToGood);
 			
@@ -57,6 +59,7 @@ describeMany(
 	}),
 
 	they('should fail on a bad link to a bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			const oldStat = fs.lstatSync(files.badToBad);
 			

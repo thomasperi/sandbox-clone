@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 describeMany(
 	['truncate', 'promise'],
@@ -27,6 +27,7 @@ describeMany(
 	}),
 
 	they('should succeed at truncating good link to good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.goodToGood);
@@ -36,6 +37,7 @@ describeMany(
 		});
 	}),
 	they('should succeed at truncating bad link to good file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.badToGood);
@@ -45,6 +47,7 @@ describeMany(
 		});
 	}),
 	they('should fail at truncating good link to bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.goodToBad);
@@ -54,6 +57,7 @@ describeMany(
 		});
 	}),
 	they('should fail at truncating bad link bad file', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			sandbox(sandboxDir);
 			const result = await __method__(files.badToBad);

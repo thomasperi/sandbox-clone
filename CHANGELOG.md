@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Some relative paths didn't behave as expected before.
+- Relative behave as intended now.
+- Windows support.
 
 
 ## [1.0.2] - 2023-04-16

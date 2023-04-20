@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 function copies(files) {
 	files.goodFileNew = files.goodFile + '-new';
@@ -10,6 +10,9 @@ function copies(files) {
 
 // copyFile, cp, link, and symlink all have the same relationship between their
 // path parameters and the files they create, so they can be tested together.
+
+
+
 describeMany(
 	['copyFile', 'promise'],
 	['copyFile', 'callback'],
@@ -22,10 +25,12 @@ describeMany(
 	['link', 'promise'],
 	['link', 'callback'],
 	['linkSync', 'sync'],
-
-	['symlink', 'promise'],
-	['symlink', 'callback'],
-	['symlinkSync', 'sync'],
+	
+	...(isWindows ? [] : [
+		['symlink', 'promise'],
+		['symlink', 'callback'],
+		['symlinkSync', 'sync'],
+	]),
 
 	they('should succeed at goodFile -> goodFileNew', async (__method__) => {
 		await withTempFiles(async (sandboxDir, files) => {
@@ -82,6 +87,7 @@ describeMany(
 	['cpSync', 'sync'],
 
 	they('should succeed at overwriting an existing good-to-bad symlink', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			copies(files);
 			
@@ -97,6 +103,7 @@ describeMany(
 	}),
 
 	they('should succeed at overwriting an existing good-to-good symlink', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			copies(files);
 			
@@ -120,6 +127,7 @@ describeMany(
 	['copyFileSync', 'sync'],
 
 	they('should fail at overwriting an existing good-to-bad symlink', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			copies(files);
 
@@ -134,6 +142,7 @@ describeMany(
 		});
 	}),
 	they('should succeed at overwriting an existing good-to-good symlink', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			copies(files);
 			

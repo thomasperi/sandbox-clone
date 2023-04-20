@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 const { F_OK, R_OK, W_OK, X_OK } = fs.constants;
 
@@ -132,6 +132,7 @@ describeMany(
 	}),
 	
 	they('should succeed at accessing a good link to a good file for write', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			chmod_u_rwx(files);
 			
@@ -143,6 +144,7 @@ describeMany(
 		});
 	}),
 	they('should succeed at accessing a bad link to a good file for write', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			chmod_u_rwx(files);
 			
@@ -154,6 +156,7 @@ describeMany(
 		});
 	}),
 	they('should fail at accessing a good link to a bad file for write', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			chmod_u_rwx(files);
 			
@@ -165,6 +168,7 @@ describeMany(
 		});
 	}),
 	they('should fail at accessing a bad link to a bad file for write', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			chmod_u_rwx(files);
 			
@@ -266,7 +270,7 @@ describeMany(
 			assert.equal(goodFromSandboxResult, undefined);
 			assert.equal(dotFromGoodResult, undefined);
 			assert.equal(code(emptyFromGoodResult), 'ENOENT');
-				// `access` doesn't know what to do with an empty string, but the sandbox accepts it
+			// `access` doesn't know what to do with an empty string, but the sandbox accepts it
 
 			assert.equal(code(badFromGoodResult), 'OUTSIDE_SANDBOX');
 			assert.equal(code(badFromTempResult), 'OUTSIDE_SANDBOX');

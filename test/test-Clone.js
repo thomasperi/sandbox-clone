@@ -1,12 +1,16 @@
 /*global describe, it */
 const os = require('os'); // eslint-disable-line no-unused-vars
 const fs = require('fs'); // eslint-disable-line no-unused-vars
-const path = require('path').posix; // eslint-disable-line no-unused-vars
+const path = require('path'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { Clone, isBoxed } = require('..'); // eslint-disable-line no-unused-vars
 
 const tmp = os.tmpdir();
 const source = path.join(__dirname, 'test-Clone');
+
+function uniformSlashes(obj) {
+	return JSON.parse(JSON.stringify(obj).replace(/\\\\/g, '/'));
+}
 
 describe('Clone tests', async () => {
 
@@ -31,7 +35,9 @@ describe('Clone tests', async () => {
 		try {
 			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/^clone-.{6}\/base$/.test(baseRel), 'temp base path should match pattern');
+			
+			assert.equal(path.basename(baseRel), 'base');
+			assert(/^clone-.{6}$/.test(path.dirname(baseRel)), 'temp base path should match pattern');
 			assert(fs.existsSync(base), 'temp base should exist');
 			assert(fs.statSync(base).isDirectory(), 'temp base should be a directory');
 			assert(fs.readdirSync(base).length === 0, 'temp base directory should be empty');
@@ -71,9 +77,11 @@ describe('Clone tests', async () => {
 		try {
 			const base = clone.base();
 			const baseRel = path.relative(tmp, base);
-			assert(/^clone-.{6}\/test-Clone$/.test(baseRel), 'temp base path should match pattern');
+
+			assert.equal(path.basename(baseRel), 'test-Clone');
+			assert(/^clone-.{6}$/.test(path.dirname(baseRel)), 'temp base path should match pattern');
 		
-			const snap = clone.snapshot();
+			const snap = uniformSlashes(clone.snapshot());
 			const expectedSnap = {
 				'bar/sbor/thed': 'thed',
 				'bar/zote.fakeimage': 'zote',
@@ -102,7 +110,7 @@ describe('Clone tests', async () => {
 			},
 		});
 		try {
-			const snap = clone.snapshot();
+			const snap = uniformSlashes(clone.snapshot());
 			const zotePath = 'bar/zote.fakeimage';
 			const zoteBase64 = 'em90ZQ==';
 			assert.deepEqual(snap[zotePath], zoteBase64, 'fakeimage should be base64-encoded');
@@ -187,15 +195,15 @@ describe('Clone tests', async () => {
 	it('should diff snapshots', async () => {
 		const clone = new Clone({source});
 		try {
-			const before = clone.snapshot();
+			const before = uniformSlashes(clone.snapshot());
 			
 			clone.run(base => {
-				fs.writeFileSync(path.join(base, 'bar/sneg.txt'), 'sneg', 'utf8');
-				fs.writeFileSync(path.join(base, 'bar/sbor/thed'), 'thed 2.0', 'utf8');
+				fs.writeFileSync(path.join(base, 'bar', 'sneg.txt'), 'sneg', 'utf8');
+				fs.writeFileSync(path.join(base, 'bar', 'sbor', 'thed'), 'thed 2.0', 'utf8');
 				fs.rmSync(path.join(base, 'foo.txt'));
 			});
 			
-			const after = clone.snapshot();
+			const after = uniformSlashes(clone.snapshot());
 			const actualDiff = clone.diff(before, after);
 			const expectedDiff = {
 				created: [ 'bar/sneg.txt' ],
@@ -214,7 +222,7 @@ describe('Clone tests', async () => {
 		process.chdir(source);
 		const clone = new Clone({source: 'foo/..'});
 		try {
-			const result = clone.snapshot();
+			const result = uniformSlashes(clone.snapshot());
 			assert.deepEqual(result, {
 				'bar/sbor/thed': 'thed',
 				'bar/zote.fakeimage': 'zote',
@@ -230,7 +238,7 @@ describe('Clone tests', async () => {
 		process.chdir(source);
 		const clone = new Clone({source: ''});
 		try {
-			const result = clone.snapshot();
+			const result = uniformSlashes(clone.snapshot());
 			assert.deepEqual(result, {
 				'bar/sbor/thed': 'thed',
 				'bar/zote.fakeimage': 'zote',
@@ -245,7 +253,7 @@ describe('Clone tests', async () => {
 	it('should create empty directory when source path is specified as undefined', async () => {
 		const clone = new Clone({source: undefined});
 		try {
-			const result = clone.snapshot();
+			const result = uniformSlashes(clone.snapshot());
 			assert.deepEqual(result, {});
 			
 		} finally {

@@ -1,9 +1,14 @@
 /*global describe, it */
 const os = require('os');
 const fs = require('fs');
-const path = require('path').posix;
+const path = require('path');
 
 const tmp = os.tmpdir();
+
+const isWindows = os.platform() === 'win32';
+if (isWindows) {
+	console.warn('WARNING: Tests involving symlinks are skipped on Windows.');
+}
 
 async function withTempFiles(fn) {
 	const prefix = path.join(tmp, 'test-sandbox-');
@@ -28,10 +33,12 @@ async function withTempFiles(fn) {
 		fs.writeFileSync(files.goodFile, 'good', 'utf8');
 		fs.writeFileSync(files.badFile, 'bad', 'utf8');
 
-		fs.symlinkSync(files.goodFile, files.goodToGood);
-		fs.symlinkSync(files.goodFile, files.badToGood);
-		fs.symlinkSync(files.badFile, files.goodToBad);
-		fs.symlinkSync(files.badFile, files.badToBad);
+		if (!isWindows) {
+			fs.symlinkSync(files.goodFile, files.goodToGood);
+			fs.symlinkSync(files.goodFile, files.badToGood);
+			fs.symlinkSync(files.badFile, files.goodToBad);
+			fs.symlinkSync(files.badFile, files.badToBad);
+		}
 
 		await fn(sandboxDir, files);
 	} finally {
@@ -108,5 +115,6 @@ module.exports = {
 	describeMany,
 	they,
 	withTempFiles,
+	isWindows,
 };
 

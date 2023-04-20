@@ -1,7 +1,7 @@
 const fs = require('fs'); // eslint-disable-line no-unused-vars
 const assert = require('assert'); // eslint-disable-line no-unused-vars
 const { sandbox, unbox } = require('..'); // eslint-disable-line no-unused-vars
-const { describeMany, they, withTempFiles } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
+const { describeMany, they, withTempFiles, isWindows } = require('../dev/test.js'); // eslint-disable-line no-unused-vars
 
 function prefixes(files) {
 	files.badPrefix = files.badFile + '-';
@@ -25,6 +25,7 @@ describeMany(
 		});
 	}),
 	they('should succeed with a good prefix even when a link to bad exists', async (__method__) => {
+		if (isWindows) return;
 		await withTempFiles(async (sandboxDir, files) => {
 			prefixes(files);
 			fs.symlinkSync(files.badFile, files.goodPrefix);
